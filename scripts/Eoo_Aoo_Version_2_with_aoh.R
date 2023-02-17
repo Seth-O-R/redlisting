@@ -5,20 +5,23 @@
 
 ################ EOO, AOO and Mapping ######################
 ## 1. Packages and Libraries
-install.packages(c("sf", "leaflet", "raster", "rCAT", "pacman", "tidyverse")) # here we are installing the required packages. 
-pacman::p_load(sf, leaflet, raster, rCAT, tidyverse) # here we are loading the packages we need for this session. 
+install.packages(c("sf", "leaflet", "raster", "rCAT", "pacman", "tidyverse", 
+                   "stars")) # here we are installing the required packages. 
+
+# loading packages
+pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars) # here we are loading the packages we need for this session. 
 
 ## 2. Functions 
-source("functions.R")
+source("scripts/functions.R")
 
-## 2. Data Import and cleaning
-occ_points <- read.csv("IUCN point files/phagnalon_phagnaloides_iucn_point.csv") %>% 
+## 3. Data Import and cleaning
+occ_points <- read.csv("IUCN_point_files/phagnalon_phagnaloides_iucn_point.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
-## 3. Calculate EOO and AOO
+## 4. Calculate EOO and AOO
 eoo_aoo <- cal.eoo.aoo(occ_points)
 
-## 4. Produce Map 
+## 5. Produce Map 
 make.map(occ_points)
 
 ############### AOH ###########################
@@ -27,11 +30,20 @@ est_range <- st_read("polys/echinops_inf_range.kml", type = 3) # use this if loa
 boundary <- make.boundary(occ_points)
 
 ## 3. Parameters ----
+# setting min and max elevation
 elevmin <- 1830 # Varies dependent on species 
 elevmax <- 3200
+
+# creating mask 
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
-DEMrast <- raster::raster("eth_DEM_100.tif") # elevation data
-habstack <- raster::raster("eth_jung.tif")
+
+# elevation raster
+DEMrast <- raster::raster("large/eth_DEM_100.tif") # elevation data
+
+# habitat raster
+habstack <- raster::raster("large/eth_jung.tif")
+
+# Defining habitat codes
 ESA_codes <- data.frame(ESA_codes = c(105, 307)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH ----
@@ -45,3 +57,11 @@ cal.aoh.stats(theAOH)
 ## 6. Map View ---- 
 make.aoh.map(occ_points, theAOH, F)
 
+## 7. Export AOH .shp for upload to SIS ----
+# converting aoh raster to sf
+aoh_sf <- theAOH %>%
+    st_as_stars() %>% # converting to stars object for sf transformation
+    st_as_sf(as_points = F, merge = T) # converting to sf and merging points
+
+# writing .shp file 
+st_write(aoh_sf, "aoh_outs/phagnalon_phagnaloides_aoh.shp")

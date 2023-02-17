@@ -41,7 +41,7 @@ dem = function(DEMrast, mask, elevmin, elevmax){
   sp_DEM[sp_DEM > elevmax] <- NA 
   
   vals <- unique(values(sp_DEM)) %>% 
-    as.data.frame() 
+    as.data.frame(.)
   
   # some format wrangling to get ready to join 
   colnames(vals)[which(names(vals) == ".")] <- "orig"
@@ -72,8 +72,8 @@ habitat = function(habstack, mask, ESA_codes){
 recl_hab = function(singl_hab, ESA_codes){
   
   # get the raster vals
-  vals <- unique(values(singl_hab)) %>% 
-    as.data.frame() 
+  vals <- unique(values(singl_hab)) %>%
+      as.data.frame()
   
   colnames(vals)[which(names(vals) == ".")] <- "code"
   
