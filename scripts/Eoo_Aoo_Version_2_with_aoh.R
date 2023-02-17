@@ -59,8 +59,7 @@ make.aoh.map(occ_points, theAOH, F)
 
 ## 7. Export AOH .shp for upload to SIS ----
 # converting aoh raster to sf
-aoh_sf <- theAOH %>%
-    st_as_stars() %>% # converting to stars object for sf transformation
+aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transformation
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
 # writing .shp file  
