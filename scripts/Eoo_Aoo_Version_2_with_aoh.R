@@ -63,5 +63,5 @@ aoh_sf <- theAOH %>%
     st_as_stars() %>% # converting to stars object for sf transformation
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
-# writing .shp file 
+# writing .shp file  
 st_write(aoh_sf, "aoh_outs/phagnalon_phagnaloides_aoh.shp")
