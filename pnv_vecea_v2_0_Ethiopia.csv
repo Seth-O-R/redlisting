@@ -1,0 +1,19 @@
+"MAP_ID"	"PNV_NAME"	"PNV_CODE"	"CELL_COUNT"
+1	"Afroalpine vegetation"	" A"	1037798
+4	"Somalia-Masai Acacia-Commiphora deciduous bushland and thicket"	" Bd"	56596093
+8	"Acacia-Commiphora stunted bushland"	" Bds"	3397
+16	"Desert"	" D"	3730183
+17	"Montane Ericaceous belt"	" E"	833425
+19	"Afromontane rain forest"	" Fa"	6185645
+22	"Complex of Afromontane undifferentiated forest with wooded grasslands and evergreen or semi-evergreen bushland and thicket at lower margins"	" Fb/Be/wd"	23087387
+26	"Afromontane moist transitional forest"	" Fe"	1823716
+41	"Riverine wooded vegetation"	" R"	16700
+42	"Somalia-Masai semi-desert grassland and shrubland"	" S"	7660790
+46	"Dry combretum wooded grassland"	" Wcd"	28948520
+52	"Acacia tortilis wooded grassland and woodland"	" WdK"	7265
+53	"Upland Acacia wooded grassland"	" We"	988059
+73	"Freshwater swamp"	" X"	495015
+88	"Water bodies"	" w"	744587
+89	"Edaphic wooded grassland on drainage-impeded or seasonally flooded soils"	" wd"	1159906
+92	"Halophytic vegetation"	" Z"	446371
+93	"lakes with Halophytic shoreline vegetation"	" Zw"	155469
