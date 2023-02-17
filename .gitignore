@@ -37,3 +37,10 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# No script folders 
+/large
+/polys
+/Geocat
+/IUCN_point_files
+/aoh_outs
