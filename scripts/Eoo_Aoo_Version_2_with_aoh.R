@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars) # here we are loadin
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/phagnalon_phagnaloides_iucn_point.csv") %>% 
+occ_points <- read.csv("IUCN_point_files/poa_pumilio_IUCN_pointfile.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
@@ -26,16 +26,16 @@ make.map(occ_points)
 
 ############### AOH ###########################
 ## 2. Data Import ----
-est_range <- st_read("polys/echinops_inf_range.kml", type = 3) # use this if loading in from a Google earth KML
+est_range <- st_read("polys/poa_pumilio_est_range.kml", type = 3) # use this if loading in from a Google earth KML
 boundary <- make.boundary(occ_points)
 
 ## 3. Parameters ----
 # setting min and max elevation
-elevmin <- 1830 # Varies dependent on species 
-elevmax <- 3200
+elevmin <- 4200 # Varies dependent on species 
+elevmax <- 4620
 
 # creating mask 
-mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
+mask <- est_range # This can either be the est_range KML or the boundary object from the EOO calculation                             
 
 # elevation raster
 DEMrast <- raster::raster("large/eth_DEM_100.tif") # elevation data
@@ -44,7 +44,7 @@ DEMrast <- raster::raster("large/eth_DEM_100.tif") # elevation data
 habstack <- raster::raster("large/eth_jung.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(105, 307)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(407, 6)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH ----
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -55,7 +55,7 @@ theAOH <- aoh(theHAB, theDEM, mask)
 cal.aoh.stats(theAOH)
 
 ## 6. Map View ---- 
-make.aoh.map(occ_points, theAOH, F)
+make.aoh.map(occ_points, theAOH, T)
 
 ## 7. Export AOH .shp for upload to SIS ----
 # converting aoh raster to sf
@@ -63,4 +63,6 @@ aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transforma
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
 # writing .shp file  
-st_write(aoh_sf, "aoh_outs/phagnalon_phagnaloides_aoh.shp")
+st_write(aoh_sf, "aoh_outs/poa_pumilio_aoh.shp")
+
+##########
