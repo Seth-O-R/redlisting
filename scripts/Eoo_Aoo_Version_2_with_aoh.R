@@ -63,9 +63,12 @@ aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transforma
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
 # exporting boundary as shape file
-st_write(boundary, "aoh_outs/acanthopale_aethiogermanica_boundary.shp")
+st_write(boundary, "aoh_outs/boundaries/acanthopale_aethiogermanica_boundary.kml", 
+         driver = 'kml')
 
 # writing .shp file  
 st_write(aoh_sf, "aoh_outs/poa_pumilio_aoh.shp")
+
+st_wr
 
 ##########
