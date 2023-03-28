@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars) # here we are loadin
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/Acanthopale_aethiogermanica_IUCN_pointfile.csv") %>% 
+occ_points <- read.csv("IUCN_point_files/festuca_gilbertiana_IUCN.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
@@ -26,25 +26,34 @@ make.map(occ_points)
 
 ############### AOH ###########################
 ## 2. Data Import ----
-est_range <- st_read("polys/poa_pumilio_est_range.kml", type = 3) # use this if loading in from a Google earth KML
+# use this if loading in from a Google earth KML
+est_range <- st_read("polys/festuca_simien.kml", type = 3) 
+
+# is you want to use a multi polygon the individual components have to be loaded 
+# in separately then unioned 
+poly_1 <- st_read('polys/festuca_arsi.kml', type = 3)
+
+poly_union <- st_union(est_range, poly_1)
+
+# use this if using the spp EOO as the boundary
 boundary <- make.boundary(occ_points)
 
 ## 3. Parameters ----
 # setting min and max elevation
-elevmin <- 1600 # Varies dependent on species 
-elevmax <- 2600
+elevmin <- 3240 # Varies dependent on species 
+elevmax <- 4620
 
 # creating mask 
-mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
+mask <- poly_union # This can either be the est_range KML or the boundary object from the EOO calculation                             
 
 # elevation raster
-DEMrast <- raster::raster("large/dem.tif") # elevation data
+DEMrast <- raster::raster("large/eth_DEM_100.tif") # elevation data
 
 # habitat raster
-habstack <- raster::raster("large/ESACCI_1km_2020.tif")
+habstack <- raster::raster("large/eth_jung.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(50, 60, 61, 71, 90)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = 407) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH ----
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -67,8 +76,8 @@ st_write(boundary, "aoh_outs/boundaries/acanthopale_aethiogermanica_boundary.kml
          driver = 'kml')
 
 # writing .shp file  
-st_write(aoh_sf, "aoh_outs/poa_pumilio_aoh.shp")
+st_write(aoh_sf, "aoh_outs/festuca_gilbertiana_aoh.shp")
 
-st_wr
+
 
 ##########
