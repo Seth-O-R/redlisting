@@ -26,7 +26,16 @@ make.map(occ_points)
 
 ############### AOH ###########################
 ## 2. Data Import ----
-est_range <- st_read("polys/poa_pumilio_est_range.kml", type = 3) # use this if loading in from a Google earth KML
+# use this if loading in from a Google earth KML
+est_range <- st_read("polys/festuca_simien.kml", type = 3) 
+
+# is you want to use a multi polygon the individual components have to be loaded 
+# in separately then unioned 
+poly_1 <- st_read('polys/festuca_arsi.kml', type = 3)
+
+poly_union <- st_union(est_range, poly_1)
+
+# use this if using the spp EOO as the boundary
 boundary <- make.boundary(occ_points)
 
 ## 3. Parameters ----
@@ -55,7 +64,7 @@ theAOH <- aoh(theHAB, theDEM, mask)
 cal.aoh.stats(theAOH)
 
 ## 6. Map View ---- 
-make.aoh.map(occ_points, theAOH, T)
+make.aoh.map(occ_points, theAOH, F)
 
 ## 7. Export AOH .shp for upload to SIS ----
 # converting aoh raster to sf
@@ -67,8 +76,8 @@ st_write(boundary, "aoh_outs/boundaries/acanthopale_aethiogermanica_boundary.kml
          driver = 'kml')
 
 # writing .shp file  
-st_write(aoh_sf, "aoh_outs/poa_pumilio_aoh.shp")
+st_write(aoh_sf, "aoh_outs/acanthopale_aethiogermanica.shp")
 
-st_wr
+
 
 ##########
