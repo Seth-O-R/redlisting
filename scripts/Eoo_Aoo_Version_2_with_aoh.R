@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars) # here we are loadin
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/festuca_gilbertiana_IUCN.csv") %>% 
+occ_points <- read.csv("IUCN_point_files/Polyscias_farinosa_iucn_pointfile.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
@@ -40,20 +40,20 @@ boundary <- make.boundary(occ_points)
 
 ## 3. Parameters ----
 # setting min and max elevation
-elevmin <- 3240 # Varies dependent on species 
-elevmax <- 4620
+elevmin <- 1700 # Varies dependent on species 
+elevmax <- 2100
 
 # creating mask 
-mask <- poly_union # This can either be the est_range KML or the boundary object from the EOO calculation                             
+mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
 
 # elevation raster
-DEMrast <- raster::raster("large/eth_DEM_100.tif") # elevation data
+DEMrast <- raster::raster("large/dem.tif") # elevation data
 
 # habitat raster
-habstack <- raster::raster("large/eth_jung.tif")
+habstack <- raster::raster("large/ESACCI_1km_2020.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = 407) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(120, 121, 122)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH ----
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
