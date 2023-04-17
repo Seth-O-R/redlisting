@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars) # here we are loadin
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/Polyscias_farinosa_iucn_pointfile.csv") %>% 
+occ_points <- read.csv("IUCN_point_files/Elaeocarpus_macrophyllus_test.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
@@ -40,8 +40,8 @@ boundary <- make.boundary(occ_points)
 
 ## 3. Parameters ----
 # setting min and max elevation
-elevmin <- 1700 # Varies dependent on species 
-elevmax <- 2100
+elevmin <- 100 # Varies dependent on species 
+elevmax <- 500
 
 # creating mask 
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
@@ -53,7 +53,7 @@ DEMrast <- raster::raster("large/dem.tif") # elevation data
 habstack <- raster::raster("large/ESACCI_1km_2020.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(120, 121, 122)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(50, 60, 61)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH ----
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -76,12 +76,7 @@ st_write(boundary, "aoh_outs/boundaries/acanthopale_aethiogermanica_boundary.kml
          driver = 'kml')
 
 # writing .shp file  
-<<<<<<< HEAD
-st_write(aoh_sf, "aoh_outs/acanthopale_aethiogermanica.shp")
-=======
-st_write(aoh_sf, "aoh_outs/festuca_gilbertiana_aoh.shp")
->>>>>>> a0db0d526c3a9d7e97b2fb8070497699e3ad72d9
-
+st_write(aoh_sf, "aoh_outs/elaeocarpus_macrophyllus.shp")
 
 
 ##########
