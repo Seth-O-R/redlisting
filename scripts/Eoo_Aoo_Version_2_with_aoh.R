@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars) # here we are loadin
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/Polyscias_farinosa_iucn_pointfile.csv") %>% 
+occ_points <- read.csv("IUCN_point_files/Elaeocarpus_macrophyllus_test.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
@@ -25,7 +25,7 @@ eoo_aoo <- cal.eoo.aoo(occ_points)
 make.map(occ_points)
 
 ############### AOH ###########################
-## 2. Data Import ----
+## 2. Data Import
 # use this if loading in from a Google earth KML
 est_range <- st_read("polys/festuca_simien.kml", type = 3) 
 
@@ -38,10 +38,10 @@ poly_union <- st_union(est_range, poly_1)
 # use this if using the spp EOO as the boundary
 boundary <- make.boundary(occ_points)
 
-## 3. Parameters ----
+## 3. Parameters
 # setting min and max elevation
-elevmin <- 1700 # Varies dependent on species 
-elevmax <- 2100
+elevmin <- 100 # Varies dependent on species 
+elevmax <- 500
 
 # creating mask 
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
@@ -53,20 +53,21 @@ DEMrast <- raster::raster("large/dem.tif") # elevation data
 habstack <- raster::raster("large/ESACCI_1km_2020.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(120, 121, 122)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(50, 60, 61)) # This will vary dependent on the habitat type 
 
-## 4. Generate the AOH ----
+## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
 theHAB <- habitat(habstack, mask,  ESA_codes)
 theAOH <- aoh(theHAB, theDEM, mask)
 
-## 5. Generate the Red List stats from AOH ---- 
+## 5. Generate the Red List stats from AOH 
 cal.aoh.stats(theAOH)
 
-## 6. Map View ---- 
+## 6. Map View 
 make.aoh.map(occ_points, theAOH, F)
 
-## 7. Export AOH .shp for upload to SIS ----
+################ Data Export ####################
+## 7. Export AOH .shp for upload to SIS
 # converting aoh raster to sf
 aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transformation
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
@@ -76,12 +77,7 @@ st_write(boundary, "aoh_outs/boundaries/acanthopale_aethiogermanica_boundary.kml
          driver = 'kml')
 
 # writing .shp file  
-<<<<<<< HEAD
-st_write(aoh_sf, "aoh_outs/acanthopale_aethiogermanica.shp")
-=======
-st_write(aoh_sf, "aoh_outs/festuca_gilbertiana_aoh.shp")
->>>>>>> a0db0d526c3a9d7e97b2fb8070497699e3ad72d9
-
+st_write(aoh_sf, "aoh_outs/elaeocarpus_macrophyllus.shp")
 
 
 ##########
