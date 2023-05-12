@@ -16,12 +16,6 @@ dem_masked <- mask(vert_resamp, java_crop)
 
 # comparing rasters 
 compareGeom(java_hab, dem_masked)
-java_hab
-dem_masked
-
-# altering extent of dem crop to match java_hab
-ext(dem_masked) <- ext(java_hab)
-compareGeom(java_hab, dem_masked)
 
 # writing file
 writeRaster(vert_resamp, "large/indo_dem_resample_300.tif", overwrite = T)
