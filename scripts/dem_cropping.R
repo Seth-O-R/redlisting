@@ -1,18 +1,22 @@
 pacman::p_load("terra", "raster", "sf", "sp", "tidyverse")
 
+# loading in additional files for crop and resample
 java_crop <- vect("large/large_file_crops/java_crop.kml")
+java_hab <- rast("large/java_300_dem.tif")
 
+# loading DEM files and creating vrt raster to merge
 files <- list.files(path = "large/srtm_30/", full.names = T)
-
 vert_file <- vrt(c(files), "vert_dem.tif", overwrite = T)
 
-vert_agr <- terra::aggregate(vert_file, fact = 10, fun = 'mean')
+# resampling raster to match jung hab
+vert_resamp <- resample(rast("large/vert_dem.tif"), java_hab, method = 'bilinear') # having to load in the vert file as a rast as it didnt like if using the vert file created earlier
 
-dem_crop <- crop(vert_agr, java_crop)
+# croping dem
+dem_crop <- crop(vert_resamp, java_crop)
 
-plot(dem_crop)
+# comparing rasters 
+compareGeom(java_hab, dem_crop)
 
-writeRaster(dem_crop, "large/java_300_dem.tif")
-writeRaster(vert_agr, "large/indo_dem_resample_300.tif")
-
-
+# writing file
+writeRaster(vert_resamp, "large/indo_dem_resample_300.tif", overwrite = T)
+writeRaster(dem_crop, "large/java_jung_dem.tif", overwrite = T)
