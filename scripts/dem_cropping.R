@@ -24,10 +24,17 @@ writeRaster(vert_resamp, "large/indo_dem_resample_300.tif", overwrite = T)
 writeRaster(dem_masked, "large/java_jung_dem.tif", overwrite = T)
 
 ## Resampling Jung hab map to 1 km ----
-java_hab_1km <- resample(java_hab, esa_java, method = 'near')
+# loading in 1 km DEM
+dem_1km <- rast("large/dem.tif")
+
+# cropping 1 km dem to target area
+dem_1km_target <- crop(dem_1km, java_crop)
+
+# resampling jung hab map to 1 km
+java_hab_1km <- resample(java_hab, dem_1km_target, method = 'near')
 
 # comparing java hab and esa_java
-compareGeom(java_hab_1km, esa_java)
+compareGeom(java_hab_1km, dem_1km_target)
 
 # writing file 
 writeRaster(java_hab_1km, "large/java_jung_hab_1km.tiff", overwrite = T)
