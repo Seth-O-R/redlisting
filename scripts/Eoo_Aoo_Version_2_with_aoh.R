@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars) # here we are loadin
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/Alangium_villosum_IUCN_Pointfile.csv") %>% 
+occ_points <- read.csv("IUCN_point_files/Vaccinium_cuneifolium_IUCN_pointfile.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
@@ -44,11 +44,11 @@ boundary_buffer <- st_union(buffer, boundary) # joining mcp with buffer
     
 ## 3. Parameters
 # setting min and max elevation
-elevmin <- 700 # Varies dependent on species 
-elevmax <- 1800
+elevmin <- 1000 # Varies dependent on species 
+elevmax <- 2000
 
 # creating mask 
-mask <- boundary_buffer # This can either be the est_range KML or the boundary object from the EOO calculation                             
+mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
 
 # elevation raster
 DEMrast <- raster::raster("large/dem.tif") # elevation data
@@ -77,7 +77,16 @@ aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transforma
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
 # exporting boundary as shape file
-st_write(boundary, "aoh_outs/boundaries/acanthopale_aethiogermanica_boundary.kml", 
+st_write(boundary, "aoh_outs/boundaries/vaccinium_cuneifolium.kml", 
+         driver = 'kml')
+
+# exporting occurences as shape file with boundary
+points_spat <- occ_points %>% 
+    select(long, lat) %>% 
+    st_as_sf(coords = c("long", "lat"), crs = "4236") %>%
+    st_buffer(dist = 0.01) #1 km buffer
+
+st_write(points_spat, "aoh_outs/boundaries/vaccinium_cuneifoliums_points_1km.kml",
          driver = 'kml')
 
 # writing .shp file  
