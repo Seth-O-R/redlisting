@@ -15,8 +15,8 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars) # here we are loadin
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/Vaccinium_cuneifolium_IUCN_pointfile.csv") %>% 
-  filter.occurences(T) # If you want to use all occurrences change the T to an F
+occ_points <- read.csv("IUCN_point_files/Macaranga_rhizinoides_sRedlist_input.csv") %>% 
+  filter.occurences(F) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
 eoo_aoo <- cal.eoo.aoo(occ_points)
@@ -44,8 +44,8 @@ boundary_buffer <- st_union(buffer, boundary) # joining mcp with buffer
     
 ## 3. Parameters
 # setting min and max elevation
-elevmin <- 1000 # Varies dependent on species 
-elevmax <- 2000
+elevmin <- 350 # Varies dependent on species 
+elevmax <- 2400
 
 # creating mask 
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
@@ -54,10 +54,10 @@ mask <- boundary # This can either be the est_range KML or the boundary object f
 DEMrast <- raster::raster("large/dem.tif") # elevation data
 
 # habitat raster
-habstack <- raster::raster("large/ESACCI_1km_2020.tif")
+habstack <- raster::raster("large/java_jung_hab_1km.tiff")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(50, 71, 90)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(106, 109)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -69,6 +69,17 @@ cal.aoh.stats(theAOH)
 
 ## 6. Map View 
 make.aoh.map(occ_points, theAOH, F)
+
+################ Population estimate ############
+# setting mean population density
+mean_pop_dens_km <- 679.4
+
+# calculating aoh area
+aoh_terra <- terra::rast(theAOH) # converting to terra for ease of calculation
+aoh_area <- terra::expanse(aoh_terra, unit = 'km', transform = F)
+
+# estimating population 
+mean_pop_dens_km * aoh_area
 
 ################ Data Export ####################
 ## 7. Export AOH .shp for upload to SIS
