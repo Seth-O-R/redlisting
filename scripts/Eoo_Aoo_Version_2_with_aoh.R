@@ -125,3 +125,6 @@ st_write(points_spat, "aoh_outs/boundaries/vaccinium_cuneifoliums_points_1km.kml
 st_write(aoh_sf, "aoh_outs/alangium_villosum_esa_1km.shp")
 
 
+# exporting AOH PA intersection 
+writeVector(wpda_mask, "aoh_outs/vaccinium_cuneifolium_pa_intersect.kml",
+            filetype = 'kml', overwrite = T)
