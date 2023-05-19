@@ -3,20 +3,20 @@
 ## 25/11/2020
 
 
-################ EOO, AOO and Mapping ######################
+### EOO, AOO and Mapping ----
 ## 1. Packages and Libraries
 install.packages(c("sf", "leaflet", "raster", "rCAT", "pacman", "tidyverse", 
-                   "stars")) # here we are installing the required packages. 
+                   "stars", "terra")) # here we are installing the required packages. 
 
 # loading packages
-pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars) # here we are loading the packages we need for this session. 
+pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra) # here we are loading the packages we need for this session. 
 
 ## 2. Functions 
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/Macaranga_rhizinoides_sRedlist_input.csv") %>% 
-  filter.occurences(F) # If you want to use all occurrences change the T to an F
+occ_points <- read.csv("IUCN_point_files/Vaccinium_cuneifolium_IUCN_pointfile.csv") %>% 
+  filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
 eoo_aoo <- cal.eoo.aoo(occ_points)
@@ -24,7 +24,7 @@ eoo_aoo <- cal.eoo.aoo(occ_points)
 ## 5. Produce Map 
 make.map(occ_points)
 
-############### AOH ###########################
+### AOH -----
 ## 2. Data Import
 # use this if loading in from a Google earth KML
 est_range <- st_read("polys/festuca_simien.kml", type = 3) 
@@ -70,19 +70,40 @@ cal.aoh.stats(theAOH)
 ## 6. Map View 
 make.aoh.map(occ_points, theAOH, F)
 
-################ Population estimate ############
-# setting mean population density
+### Percentage of AoH covered by protected areas ----
+## 7. loading in WDPA data and wrangling AoH data
+# setting path
+files_path <- list.files(path = "large/wpda_data/indo/", pattern = "*shp", full.names = T )
+
+# reading in and combing into single spatvect
+wdpa_comb <- lapply(files_path, read_sf) %>%
+    do.call(rbind, .) %>%
+    vect()
+
+# AoH internal 
+aoh_terra <- aoh_terra <- terra::rast(theAOH)
+
+# AoH external shp. (sRedlist etc.)
+aoh_terra <- vect("../../sRedlist/Outputs/sRedList_assessment_Vaccinium_cuneifolium/Vaccinium_cuneifolium_sRedList/sRedList_Vaccinium.cuneifolium_Distribution.shp") %>%
+    project(., crs(wdpa_comb))
+
+## 8. Masking wpda by aoh and calculating area 
+wpda_mask <- terra::intersect(wdpa_comb, aoh_terra)
+area_of_aoh_in_pa <- print(sum(expanse(wpda_mask))/sum(expanse(aoh_terra))*100)
+
+### Population estimate ----
+## 10. estimating population density from AoH
+# setting mean population density (from external data)
 mean_pop_dens_km <- 679.4
 
 # calculating aoh area
-aoh_terra <- terra::rast(theAOH) # converting to terra for ease of calculation
 aoh_area <- terra::expanse(aoh_terra, unit = 'km', transform = F)
 
 # estimating population 
 mean_pop_dens_km * aoh_area
 
-################ Data Export ####################
-## 7. Export AOH .shp for upload to SIS
+### Data Export ----
+## 11. Export AOH .shp for upload to SIS
 # converting aoh raster to sf
 aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transformation
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
@@ -104,4 +125,3 @@ st_write(points_spat, "aoh_outs/boundaries/vaccinium_cuneifoliums_points_1km.kml
 st_write(aoh_sf, "aoh_outs/alangium_villosum_esa_1km.shp")
 
 
-##########
