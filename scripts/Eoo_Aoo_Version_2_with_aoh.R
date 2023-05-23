@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra) # here we are
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/Vaccinium_cuneifolium_IUCN_pointfile.csv") %>% 
+occ_points <- read.csv("IUCN_point_files/Shirakiopsis_virgata_IUCN_Pointfile.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
@@ -44,11 +44,11 @@ boundary_buffer <- st_union(buffer, boundary) # joining mcp with buffer
     
 ## 3. Parameters
 # setting min and max elevation
-elevmin <- 350 # Varies dependent on species 
-elevmax <- 2400
+elevmin <- 0 # Varies dependent on species 
+elevmax <- 500
 
 # creating mask 
-mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
+mask <- boundary_buffer # This can either be the est_range KML or the boundary object from the EOO calculation                             
 
 # elevation raster
 DEMrast <- raster::raster("large/dem.tif") # elevation data
@@ -57,7 +57,7 @@ DEMrast <- raster::raster("large/dem.tif") # elevation data
 habstack <- raster::raster("large/java_jung_hab_1km.tiff")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(106, 109)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(106, 107, 108)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -80,16 +80,13 @@ wdpa_comb <- lapply(files_path, read_sf) %>%
     do.call(rbind, .) %>%
     vect()
 
-# AoH internal 
-aoh_terra <- aoh_terra <- terra::rast(theAOH)
-
-# AoH external shp. (sRedlist etc.)
-aoh_terra <- vect("../../sRedlist/Outputs/sRedList_assessment_Vaccinium_cuneifolium/Vaccinium_cuneifolium_sRedList/sRedList_Vaccinium.cuneifolium_Distribution.shp") %>%
+# Converting AoH to polygon 
+aoh_polygon <- as.polygons(terra::rast(theAOH)) %>%
     project(., crs(wdpa_comb))
 
 ## 8. Masking wpda by aoh and calculating area 
-wpda_mask <- terra::intersect(wdpa_comb, aoh_terra)
-area_of_aoh_in_pa <- print(sum(expanse(wpda_mask))/sum(expanse(aoh_terra))*100)
+wpda_masked <- terra::intersect(aoh_polygon, wdpa_comb)
+area_of_aoh_in_pa <- print(sum(expanse(wpda_masked))/sum(expanse(aoh_polygon))*100)
 
 ### Population estimate ----
 ## 10. estimating population density from AoH
