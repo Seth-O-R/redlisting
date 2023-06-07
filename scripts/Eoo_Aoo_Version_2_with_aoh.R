@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra) # here we are
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/Shirakiopsis_virgata_IUCN_Pointfile.csv") %>% 
+occ_points <- read.csv("IUCN_point_files/Baphia_abyssinica_IUCN_pointfile.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
@@ -40,24 +40,24 @@ boundary <- make.boundary(occ_points)
 
 # add buffer to EOO mcp if wanted
 buffer <- st_buffer(boundary, dist = 0.1)
-boundary_buffer <- st_union(buffer, boundary) # joining mcp with buffer
+boundary <- st_union(buffer, boundary) # joining mcp with buffer
     
 ## 3. Parameters
 # setting min and max elevation
-elevmin <- 0 # Varies dependent on species 
-elevmax <- 500
+elevmin <- 500 # Varies dependent on species 
+elevmax <- 1400
 
 # creating mask 
-mask <- boundary_buffer # This can either be the est_range KML or the boundary object from the EOO calculation                             
+mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
 
 # elevation raster
 DEMrast <- raster::raster("large/dem.tif") # elevation data
 
 # habitat raster
-habstack <- raster::raster("large/java_jung_hab_1km.tiff")
+habstack <- raster::raster("large/ESACCI_1km_2020.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(106, 107, 108)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(50, 60, 61, 110, 180, 100)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -73,7 +73,7 @@ make.aoh.map(occ_points, theAOH, F)
 ### Percentage of AoH covered by protected areas ----
 ## 7. loading in WDPA data and wrangling AoH data
 # setting path
-files_path <- list.files(path = "large/wpda_data/indo/", pattern = "*shp", full.names = T )
+files_path <- list.files(path = "large/wdpa_data/", pattern = "*shp", full.names = T )
 
 # reading in and combing into single spatvect
 wdpa_comb <- lapply(files_path, read_sf) %>%
@@ -123,5 +123,5 @@ st_write(aoh_sf, "aoh_outs/alangium_villosum_esa_1km.shp")
 
 
 # exporting AOH PA intersection 
-writeVector(wpda_mask, "aoh_outs/vaccinium_cuneifolium_pa_intersect.kml",
-            filetype = 'kml', overwrite = T)
+writeVector(wpda_masked, "aoh_outs/baphia_abyssinica_pa_intersect.shp",
+                filetype = 'ESRI Shapefile', overwrite = T)
