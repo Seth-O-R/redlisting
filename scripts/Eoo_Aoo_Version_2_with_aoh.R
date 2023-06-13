@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra) # here we are
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occ_points <- read.csv("IUCN_point_files/Baphia_abyssinica_IUCN_pointfile.csv") %>% 
+occ_points <- read.csv("IUCN_point_files/Rhipidoglossum_candidum_IUCN_pointfile.csv") %>% 
   filter.occurences(T) # If you want to use all occurrences change the T to an F
 
 ## 4. Calculate EOO and AOO
@@ -27,11 +27,11 @@ make.map(occ_points)
 ### AOH -----
 ## 2. Data Import
 # use this if loading in from a Google earth KML
-est_range <- st_read("polys/festuca_simien.kml", type = 3) 
+est_range <- st_read("", type = 3) 
 
 # if you want to use a multi polygon the individual components have to be loaded 
 # in separately then unioned 
-poly_1 <- st_read('polys/festuca_arsi.kml', type = 3)
+poly_1 <- st_read('', type = 3)
 
 poly_union <- st_union(est_range, poly_1)
 
@@ -44,8 +44,8 @@ boundary <- st_union(buffer, boundary) # joining mcp with buffer
     
 ## 3. Parameters
 # setting min and max elevation
-elevmin <- 500 # Varies dependent on species 
-elevmax <- 1400
+elevmin <- 2000 # Varies dependent on species 
+elevmax <- 2100
 
 # creating mask 
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
@@ -54,10 +54,10 @@ mask <- boundary # This can either be the est_range KML or the boundary object f
 DEMrast <- raster::raster("large/dem.tif") # elevation data
 
 # habitat raster
-habstack <- raster::raster("large/ESACCI_1km_2020.tif")
+habstack <- raster::raster("large/ethio_jung_hab_1km.tiff")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(50, 60, 61, 110, 180, 100)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(109)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -106,7 +106,7 @@ aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transforma
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
 # exporting boundary as shape file
-st_write(boundary, "aoh_outs/boundaries/vaccinium_cuneifolium.kml", 
+st_write(boundary, "aoh_outs/boundaries/Rhipidoglossum_candidum.kml", 
          driver = 'kml')
 
 # exporting occurences as shape file with boundary
@@ -119,9 +119,9 @@ st_write(points_spat, "aoh_outs/boundaries/vaccinium_cuneifoliums_points_1km.kml
          driver = 'kml')
 
 # writing .shp file  
-st_write(aoh_sf, "aoh_outs/alangium_villosum_esa_1km.shp")
+st_write(aoh_sf, "aoh_outs/Rhipidoglossum_candidum.shp")
 
 
 # exporting AOH PA intersection 
-writeVector(wpda_masked, "aoh_outs/baphia_abyssinica_pa_intersect.shp",
+writeVector(wpda_masked, "aoh_outs/pa_intersects/Rhipidoglossum_candidum_pa_intersect.shp",
                 filetype = 'ESRI Shapefile', overwrite = T)
