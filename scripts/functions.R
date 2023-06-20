@@ -158,16 +158,46 @@ cal.eoo.aoo <- function(occurences) {
 }
 
 # make.boundary 
-make.boundary <- function(occurences){
-  # make points spatial
-  points_spat <- occurences %>% 
-    select(long, lat) %>% 
-    st_as_sf(coords = c("long", "lat"), crs = "4236")
-  
-  # make mcp
-  st_convex_hull(st_union(points_spat)) %>% 
-    st_as_sf(type = 3)
-}
+make.boundary <- function(a, eoo = T, buffer = F, buffer_dist = b){
+    if(eoo == T & buffer == F) {
+       
+         # make points spatial
+        points_spat <- a %>% 
+            select(long, lat) %>% 
+            st_as_sf(coords = c("long", "lat"), crs = "4236")
+        
+        # make mcp
+        st_convex_hull(st_union(points_spat)) %>% 
+            st_as_sf(type = 3)
+        
+        } else if(eoo == T & buffer == T){ 
+            
+            # make points spatial
+            points_spat <- a %>% 
+                select(long, lat) %>% 
+                st_as_sf(coords = c("long", "lat"), crs = "4236")
+            
+            # make mcp
+            st_convex_hull(st_union(points_spat)) %>% 
+                st_as_sf(type = 3)
+            
+            # add buffer
+            st_buffer(points_spat, dist = b)
+            t_union(buffer, points_spat)
+            
+            } else if(eoo == F & buffer == T){
+                
+                # make points spatial
+                points_spat <- a %>% 
+                    select(long, lat) %>% 
+                    st_as_sf(coords = c("long", "lat"), crs = "4236")
+                
+                # add buffer
+                st_buffer(points_spat, dist = b)
+                st_union(buffer, points_spat)
+            }
+    }
+
 
 # make.map - produces map using leaflet 
 make.map <- function(occurences){
@@ -215,75 +245,77 @@ cal.aoh.stats <- function(the_aoh){
   
   print(paste0(eoo_aoo, "; AOH EOO = ", ceiling(aoh_eookm2), "; AOH AOO = ", ceiling(aoh_aookm2)))
 }
-  
+
     
 # make.aoh.map - make map for aoh using leaflet
-make.aoh.map <- function(occurences, the_aoh, T){
- 
-  if(T){
-  # making occurences spatial
-  points_spat <- occurences %>% 
-    select(long, lat) %>% 
-    st_as_sf(coords = c("long", "lat")) %>%
-    st_set_crs(4326)
-  
-  # making boundary on aoh
-  boundary_object <- as.data.frame(rasterToPoints(the_aoh)) %>%
-    rename(lat = x, long = y) %>%
-    st_as_sf(coords = c("lat", "long")) %>%
-    st_set_crs(4326)
-  
-  boundary_object <- st_convex_hull(st_union(boundary_object)) %>%
-    st_as_sf() %>%
-    st_set_crs(4326)
-  
-  # producing AOH map
-    leaflet() %>%
-      addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
-      addProviderTiles(providers$Esri.WorldImagery, group = "ersi") %>%
-      addScaleBar(position = "bottomright") %>%
-      addRasterImage(theAOH, group = "aoh", color = "red", opacity = 0.5) %>%
-      addCircleMarkers(data = points_spat, 
-                       color = "blue", 
-                       stroke = F, 
-                       fillOpacity = 0.8) %>%
-      addPolygons(data = boundary_object, # change this depending on range source
-                  color = "black",
-                  weight = 1,
-                  fillColor = "yellow",
-                  group = "shape") %>% 
-      addPolygons(data = boundary_object, # change this depending on range source
-                  color = "black", weight = 2, fill = F) 
-  } else {
-    # making occurences spatial
-    points_spat <- occurences %>% 
-      select(long, lat) %>% 
-      st_as_sf(coords = c("long", "lat")) %>%
-      st_set_crs(4326)
+make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F){
     
-    # making boundry on points 
-    boundary_object <- st_convex_hull(st_union(points_spat)) %>%
-      st_as_sf() %>%
-      st_set_crs(4326)
-    
-    # producing AOH map
-    leaflet() %>%
-      addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
-      addProviderTiles(providers$Esri.WorldImagery, group = "ersi") %>%
-      addScaleBar(position = "bottomright") %>%
-      addRasterImage(theAOH, group = "aoh", color = "red", opacity = 0.5) %>%
-      addCircleMarkers(data = points_spat, 
-                       color = "blue", 
-                       stroke = F, 
-                       fillOpacity = 0.8) %>%
-      addPolygons(data = boundary_object, # change this depending on range source
-                  color = "black",
-                  weight = 1,
-                  fillColor = "yellow",
-                  group = "shape") %>% 
-      addPolygons(data = boundary_object, # change this depending on range source
-                  color = "black", weight = 2, fill = F) 
-  }
-    
-}  
+    if(boundary_aoh == F){
+        
+        # making occurrences spatial
+        points_spat <- occurences %>% 
+            select(long, lat) %>% 
+            st_as_sf(coords = c("long", "lat")) %>%
+            st_set_crs(4326)
+            
+        # making boundary
+        boundary_object <- st_convex_hull(st_union(points_spat)) %>% 
+            st_as_sf() %>%
+            st_set_crs(4326)
+        
+        # producing AOH map
+        leaflet() %>%
+            addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
+            addProviderTiles(providers$Esri.WorldImagery, group = "ersi") %>%
+            addScaleBar(position = "bottomright") %>%
+            addPolygons(data = the_aoh,
+                        color = "red",
+                        fillColor = "red", 
+                        opacity = 0.5) %>%
+            addCircleMarkers(data = points_spat, 
+                             color = "blue", 
+                             stroke = F, 
+                             fillOpacity = 0.8) %>%
+            addPolygons(data = boundary_object, 
+                        color = "black",
+                        weight = 1,
+                        fillColor = "yellow",
+                        group = "shape") %>% 
+            addPolygons(data = boundary_object, 
+                        color = "black", weight = 2, fill = F)
+    } else {
+        
+        # making occurences spatial
+        points_spat <- occurences %>% 
+            select(long, lat) %>% 
+            st_as_sf(coords = c("long", "lat")) %>%
+            st_set_crs(4326)
+        
+        # making boundary on aoh
+        boundary_object <- st_convex_hull(st_union(the_aoh)) %>% 
+            st_as_sf() %>%
+            st_set_crs(4326)
+        
+        # producing AOH map
+        leaflet() %>%
+            addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
+            addProviderTiles(providers$Esri.WorldImagery, group = "ersi") %>%
+            addScaleBar(position = "bottomright") %>%
+            addPolygons(data = aoh_smooth,
+                        color = "red",
+                        fillColor = "red", 
+                        opacity = 0.5) %>%
+            addCircleMarkers(data = points_spat, 
+                             color = "blue", 
+                             stroke = F, 
+                             fillOpacity = 0.8) %>%
+            addPolygons(data = boundary_object, 
+                        color = "black",
+                        weight = 1,
+                        fillColor = "yellow",
+                        group = "shape") %>% 
+            addPolygons(data = boundary_object, 
+                        color = "black", weight = 2, fill = F)
+    }
+}
 
