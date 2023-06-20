@@ -115,7 +115,7 @@ aoh_with_sis <- sp::merge(aoh_smooth, sis_dataframe)
 # writing aoh.shp file  
 st_write(aoh_with_sis, "aoh_outs/chiliocephalum_schimperi_aoh.shp")
 
-## Exporting for external data tools
+## 11. Exporting for external data tools
 # exporting boundary as shape file
 st_write(boundary, "aoh_outs/boundaries/Rhipidoglossum_candidum.kml", 
          driver = 'kml')
