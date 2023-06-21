@@ -248,9 +248,9 @@ cal.aoh.stats <- function(the_aoh){
 
     
 # make.aoh.map - make map for aoh using leaflet
-make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F){
+make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F, aoh_raster = F){
     
-    if(class(the_aoh) == 'raster' & boundary_aoh == F){
+    if(aoh_raster == T & boundary_aoh == F){
         
         # making occurrences spatial
         points_spat <- occurences %>% 
@@ -258,12 +258,6 @@ make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F){
             st_as_sf(coords = c("long", "lat")) %>%
             st_set_crs(4326)
             
-        # making boundary
-        boundary_object <- as.data.frame(rasterToPoints(the_aoh)) %>%
-            rename(lat = x, long = y) %>%
-            st_as_sf(coords = c("lat", "long")) %>%
-            st_set_crs(4326)
-        
         boundary_object <- st_convex_hull(st_union(points_spat)) %>% 
             st_as_sf() %>%
             st_set_crs(4326)
@@ -289,7 +283,7 @@ make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F){
             addPolygons(data = boundary_object, 
                         color = "black", weight = 2, fill = F)
         
-    } else if(class(the_aoh) == 'raster' & boundary_aoh == T){
+    } else if(aoh_raster == T & boundary_aoh == T){
         
         # making occurences spatial
         points_spat <- occurences %>% 
@@ -303,7 +297,7 @@ make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F){
             st_as_sf(coords = c("lat", "long")) %>%
             st_set_crs(4326)
         
-        boundary_object <- st_convex_hull(st_union(the_aoh)) %>% 
+        boundary_object <- st_convex_hull(st_union(boundary_object)) %>% 
             st_as_sf() %>%
             st_set_crs(4326)
         
@@ -328,7 +322,7 @@ make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F){
             addPolygons(data = boundary_object, 
                         color = "black", weight = 2, fill = F)
         
-    }else if(boundary_aoh == F){
+    }else if(aoh_raster == F & boundary_aoh == F){
         
         # making occurrences spatial
         points_spat <- occurences %>% 
@@ -362,7 +356,7 @@ make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F){
             addPolygons(data = boundary_object, 
                         color = "black", weight = 2, fill = F)
         
-    } else if(boundary_aoh == T){
+    } else if(aoh_raster == F & boundary_aoh == T){
         
         # making occurrences spatial
         points_spat <- occurences %>% 

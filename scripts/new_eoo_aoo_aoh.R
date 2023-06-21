@@ -47,10 +47,10 @@ elevmax <- 3500
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
 
 # elevation raster
-DEMrast <- raster::raster("large/dem.tif") # elevation data
+DEMrast <- raster::raster("large/eth_DEM_100.tif") # elevation data
 
 # habitat raster
-habstack <- raster::raster("large/ethio_jung_hab_1km.tiff")
+habstack <- raster::raster("large/eth_jung.tif")
 
 # Defining habitat codes
 ESA_codes <- data.frame(ESA_codes = c(105, 307, 407)) # This will vary dependent on the habitat type 
@@ -72,7 +72,7 @@ aoh_polygon <- theAOH %>%
     st_make_valid()
 
 # dropping crumbs 
-aoh_no_crumbs <- drop_crumbs(aoh_polygon, units::set_units(3, km^2))
+aoh_no_crumbs <- drop_crumbs(aoh_polygon, units::set_units(4, km^2))
 
 # smoothing aoh
 aoh_smooth <- smooth(aoh_no_crumbs, method = 'ksmooth', smoothness = 3) %>%
@@ -80,7 +80,8 @@ aoh_smooth <- smooth(aoh_no_crumbs, method = 'ksmooth', smoothness = 3) %>%
     st_cast('POLYGON')
 
 ## 7. Map View 
-make.aoh.map(occ_points, aoh_smooth, boundary_aoh = F, aoh_raster = F)
+make.aoh.map(occ_points, theAOH, boundary_aoh = F, aoh_raster = T)
+cal.aoh.stats(theAOH)
 
 ### Percentage of AoH covered by protected areas ----
 ## 8. loading in WDPA data and wrangling AoH data
