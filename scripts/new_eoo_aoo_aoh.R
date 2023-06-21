@@ -15,7 +15,7 @@ source("scripts/functions.R")
 ## 3. Data Import and cleaning
 occs_raw <- read.csv("IUCN_point_files/Chiliocephalum_schimperi_IUCN_pointfile.csv")
 occ_points <-  occs_raw %>% 
-    filter.occurences(T) # If you want to use all occurrences change the T to an F
+    filter.occurences(T) 
 
 ### EOO, AOO and Mapping ----
 ## 4. Calculate EOO and AOO
@@ -26,13 +26,13 @@ make.map(occ_points)
 
 ### AOH -----
 ## 2. Data Import
-# use this if loading in from a Google earth KML
+# Google earth KMLimport
 est_range <- st_read("", type = 3) 
 
-# if you want to use a multi polygon the individual components have to be loaded 
-# in separately then unioned 
+# Multi polygon second kml import
 poly_1 <- st_read('', type = 3)
 
+# joining the two kmls
 poly_union <- st_union(est_range, poly_1)
 
 ## 3. Making boundary
@@ -53,7 +53,7 @@ DEMrast <- raster::raster("large/dem.tif") # elevation data
 habstack <- raster::raster("large/ethio_jung_hab_1km.tiff")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(407, 105, 307)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(105, 307, 407)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -64,11 +64,12 @@ theAOH <- aoh(theHAB, theDEM, mask)
 cal.aoh.stats(theAOH)
 
 ## 6. Smoothing AoH
-# making aoh a polgon 
+# making aoh a polygon 
 aoh_polygon <- theAOH %>%
     rasterToPolygons() %>%
     st_as_sf() %>%
-    st_union()
+    st_union() %>%
+    st_make_valid()
 
 # dropping crumbs 
 aoh_no_crumbs <- drop_crumbs(aoh_polygon, units::set_units(3, km^2))
@@ -79,7 +80,7 @@ aoh_smooth <- smooth(aoh_no_crumbs, method = 'ksmooth', smoothness = 3) %>%
     st_cast('POLYGON')
 
 ## 7. Map View 
-make.aoh.map(occ_points, aoh_smooth, boundary_aoh = F)
+make.aoh.map(occ_points, aoh_smooth, boundary_aoh = F, aoh_raster = F)
 
 ### Percentage of AoH covered by protected areas ----
 ## 8. loading in WDPA data and wrangling AoH data
