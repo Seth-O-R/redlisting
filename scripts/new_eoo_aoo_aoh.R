@@ -13,7 +13,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp)
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occs_raw <- read.csv("IUCN_point_files/Chiliocephalum_schimperi_IUCN_pointfile.csv")
+occs_raw <- read.csv("IUCN_point_files/pimpinella_keniensis_IUCN_pointfile.csv")
 occ_points <-  occs_raw %>% 
     filter.occurences(T) 
 
@@ -40,20 +40,20 @@ boundary <- make.boundary(occ_points, eoo = T, buffer = F) # if buffer wants to 
 
 ## 4. Parameters
 # setting min and max elevation
-elevmin <- 2500 # Varies dependent on species 
-elevmax <- 3500
+elevmin <- 1545 # Varies dependent on species 
+elevmax <- 2425
 
 # creating mask 
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
 
 # elevation raster
-DEMrast <- raster::raster("large/eth_DEM_100.tif") # elevation data
+DEMrast <- raster::raster("large/dem.tif") # elevation data
 
 # habitat raster
-habstack <- raster::raster("large/eth_jung.tif")
+habstack <- raster::raster("large/ESACCI_1km_2020.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(105, 307, 407)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(10, 11, 12, 20, 120, 121, 122, 130)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -80,7 +80,7 @@ aoh_smooth <- smooth(aoh_no_crumbs, method = 'ksmooth', smoothness = 3) %>%
     st_cast('POLYGON')
 
 ## 7. Map View 
-make.aoh.map(occ_points, theAOH, boundary_aoh = F, aoh_raster = T)
+make.aoh.map(occ_points, aoh_smooth, boundary_aoh = F, aoh_raster = F)
 cal.aoh.stats(theAOH)
 
 ### Percentage of AoH covered by protected areas ----
@@ -102,22 +102,26 @@ wpda_masked <- terra::intersect(aoh_polygon, wdpa_comb)
 area_of_aoh_in_pa <- print(sum(expanse(wpda_masked))/sum(expanse(aoh_polygon))*100)
 
 ### Data Export ----
-## 10. Export AOH .shp for upload to SIS
-# converting aoh raw raster to sf
+## 10. Export raw AOH 
+# converting and exporting aoh raw raster to sf
 aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transformation
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
+st_write(aoh_sf, "aoh_outs/pimipnella_keniensis_aoh_raw.shp")
+
+## 11. Exporting smoothed AOH with SIS datatable
 # adding required dataframe for shp. file 
 sis_dataframe <- as.data.frame(occs_raw[1,]) %>%
     select(-dec_lat, -dec_long, -spatialref, -event_year, -basisofrec, -catalog_no, 
            -recordedby, -recordno)
+sis_dataframe$source <- NA
 
 aoh_with_sis <- sp::merge(aoh_smooth, sis_dataframe)
 
 # writing aoh.shp file  
-st_write(aoh_with_sis, "aoh_outs/chiliocephalum_schimperi_aoh.shp")
+st_write(aoh_with_sis, "aoh_outs/pimpinella_keniensis_distribution_polygon.shp", overwrite = T)
 
-## 11. Exporting for external data tools
+## 12. Exporting for external data tools
 # exporting boundary as shape file
 st_write(boundary, "aoh_outs/boundaries/Rhipidoglossum_candidum.kml", 
          driver = 'kml')
@@ -132,5 +136,5 @@ st_write(points_spat, "aoh_outs/boundaries/vaccinium_cuneifoliums_points_1km.kml
          driver = 'kml')
 
 # exporting AOH PA intersection 
-writeVector(wpda_masked, "aoh_outs/pa_intersects/Rhipidoglossum_candidum_pa_intersect.shp",
+writeVector(wpda_masked, "aoh_outs/pa_intersects/pimpinella_keniensis_pa_intersect.shp",
             filetype = 'ESRI Shapefile', overwrite = T)
