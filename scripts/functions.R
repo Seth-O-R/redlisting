@@ -158,7 +158,8 @@ cal.eoo.aoo <- function(occurences) {
 }
 
 # make.boundary 
-make.boundary <- function(a, eoo = T, buffer = F, buffer_dist = b){
+make.boundary <- function(a, b, eoo = T, buffer = F){
+    
     if(eoo == T & buffer == F) {
        
          # make points spatial
@@ -182,19 +183,19 @@ make.boundary <- function(a, eoo = T, buffer = F, buffer_dist = b){
                 st_as_sf(type = 3)
             
             # add buffer
-            st_buffer(points_spat, dist = b)
-            t_union(buffer, points_spat)
+            buf <- st_buffer(points_spat, dist = b)
+            st_union(buf, points_spat)
             
             } else if(eoo == F & buffer == T){
-                
+         
                 # make points spatial
                 points_spat <- a %>% 
                     select(long, lat) %>% 
                     st_as_sf(coords = c("long", "lat"), crs = "4236")
                 
                 # add buffer
-                st_buffer(points_spat, dist = b)
-                st_union(buffer, points_spat)
+                buf <- st_buffer(points_spat, dist = b)
+                st_union(buf, points_spat)
             }
     }
 

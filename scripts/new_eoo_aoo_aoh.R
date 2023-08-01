@@ -13,7 +13,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp)
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occs_raw <- read.csv("IUCN_point_files/argyrolobium_schimperianum_IUCN_pointfile.csv")
+occs_raw <- read.csv("IUCN_point_files/Onobrychis_richardi_IUCN_pointfile.csv")
 occ_points <-  occs_raw %>% 
     filter.occurences(T) 
 
@@ -36,7 +36,7 @@ poly_1 <- st_read('', type = 3)
 poly_union <- st_union(est_range, poly_1)
 
 ## 3. Making boundary
-boundary <- make.boundary(occ_points, eoo = T, buffer = F) # if buffer wants to be added use buffer_dist = a where a equals distance, 0.1 = 1km
+boundary <- make.boundary(occ_points, 0.1, eoo = T, buffer = T) # if buffer wants to be added define the distance as b where 0.1 = 1km
 
 ## 4. Parameters
 # setting min and max elevation
@@ -101,26 +101,15 @@ aoh_polygon <- as.polygons(terra::rast(theAOH)) %>%
 wpda_masked <- terra::intersect(aoh_polygon, wdpa_comb)
 area_of_aoh_in_pa <- print(sum(expanse(wpda_masked))/sum(expanse(aoh_polygon))*100)
 
-### Population estimate ----
-## 10. estimating population density from AoH
-# setting mean population density (from external data)
-mean_pop_dens_km <- mean(c(40, 50, 70))
-
-# calculating aoh area
-aoh_area <- terra::expanse(terra::rast(theAOH), unit = 'km', transform = F)
-
-# estimating population 
-mean_pop_dens_km * aoh_area$area
-
 ### Data Export ----
-## 11. Export raw AOH 
+## 10. Export raw AOH 
 # converting and exporting aoh raw raster to sf
 aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transformation
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
-st_write(aoh_sf, "aoh_outs/pimipnella_keniensis_aoh_raw.shp")
+st_write(aoh_sf, "aoh_outs/argyrolobium_schimperianum_aoh_raw.shp")
 
-## 12. Exporting smoothed AOH with SIS datatable
+## 11. Exporting smoothed AOH with SIS datatable
 # adding required dataframe for shp. file 
 sis_dataframe <- as.data.frame(occs_raw[1,]) %>%
     select(-dec_lat, -dec_long, -spatialref, -event_year, -basisofrec, -catalog_no, 
@@ -130,9 +119,9 @@ sis_dataframe$source <- NA
 aoh_with_sis <- sp::merge(aoh_smooth, sis_dataframe)
 
 # writing aoh.shp file  
-st_write(aoh_with_sis, "aoh_outs/pimpinella_keniensis_distribution_polygon.shp", overwrite = T)
+st_write(aoh_with_sis, "aoh_outs/argyrolobium_schimperianum_distribution_polygon.shp", overwrite = T)
 
-## 13. Exporting for external data tools
+## 12. Exporting for external data tools
 # exporting boundary as shape file
 st_write(boundary, "aoh_outs/boundaries/Rhipidoglossum_candidum.kml", 
          driver = 'kml')
@@ -147,5 +136,5 @@ st_write(points_spat, "aoh_outs/boundaries/vaccinium_cuneifoliums_points_1km.kml
          driver = 'kml')
 
 # exporting AOH PA intersection 
-writeVector(wpda_masked, "aoh_outs/pa_intersects/pimpinella_keniensis_pa_intersect.shp",
+writeVector(wpda_masked, "aoh_outs/pa_intersects/argyrolobium_schimperianum_pa_intersect.shp",
             filetype = 'ESRI Shapefile', overwrite = T)
