@@ -32,4 +32,7 @@ vignettes/*.pdf
 /Geocat
 /IUCN_point_files
 /aoh_outs
+/genesys
+/shiny_geo_clean
+/shiny_geo_raw
 -D000516.Rhistory
