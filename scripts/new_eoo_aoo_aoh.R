@@ -13,7 +13,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp)
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occs_raw <- read.csv("IUCN_point_files/Onobrychis_richardi_IUCN_pointfile.csv")
+occs_raw <- read.csv("shiny_geo_clean/trifolium_mattirolianum_IUCN_pointfile.csv")
 occ_points <-  occs_raw %>% 
     filter.occurences(T) 
 
@@ -36,12 +36,12 @@ poly_1 <- st_read('', type = 3)
 poly_union <- st_union(est_range, poly_1)
 
 ## 3. Making boundary
-boundary <- make.boundary(occ_points, 0.1, eoo = T, buffer = T) # if buffer wants to be added define the distance as b where 0.1 = 1km
+boundary <- make.boundary(occ_points, eoo = T, buffer = F) # if buffer wants to be added define the distance as b where 0.1 = 1km
 
 ## 4. Parameters
 # setting min and max elevation
-elevmin <- 2100 # Varies dependent on species 
-elevmax <- 3500
+elevmin <- 1300 # Varies dependent on species 
+elevmax <- 2100
 
 # creating mask 
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
@@ -53,7 +53,7 @@ DEMrast <- raster::raster("large/dem.tif") # elevation data
 habstack <- raster::raster("large/ethio_jung_hab_1km.tiff")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(105, 305, 307, 405, 407)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(405, 1401, 1402)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
