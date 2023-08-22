@@ -6,12 +6,12 @@
 install.packages('CoordinateCleaner')
 pacman::p_load('tidyverse', 'CoordinateCleaner', 'sf', 'leaflet', 'rWCVP', 'terra')
 
-## Shiny GeoCAT 
-# Data import ----
+# Shiny GeoCAT ---- 
+# Data import 
 raw_occs <- read.csv("shiny_geo_raw/trifolium_mattirolianum_shiny_raw.csv") %>%
     mutate(sci_name = paste(genus, specificEpithet))
 
-# Cliping to native range ----
+# Cliping to native range
 # getting native range
 native_range <- wcvp_distribution(paste(raw_occs$sci_name[1]), taxon_rank = 'species',
                                   introduced = F, extinct = F, location_doubtful = F)
@@ -54,7 +54,7 @@ occs_with_cc <- extract(range_vect, vect(occs_native)) %>%
            latitude = unlist(map(.$geometry, 2))) %>%
     select(-geometry) 
 
-# Cleaning coords ----
+# Cleaning coords
 # creating flags
 flags <- occs_with_cc %>%
     clean_coordinates(lon = 'longitude', 
@@ -95,7 +95,6 @@ data_cleaned <- occs_with_cc %>% # this will vary based on if you flitered occs 
     mutate(presence = 1, origin = 1, compiler = 'Seth Ratcliffe', yrcompiled = 2023, citation = 'Royal Botanic Garden, Kew',
            data_sens = 0)
 
-## External data ----
 # Genesys ----
 # loading in data 
 gen_cor <- read.csv("genesys/trifolium_mattirolanum_genesys/core.csv")
@@ -149,6 +148,7 @@ duplicate_rm <- data_all %>%
 
 # converting NAs so blanks for later
 duplicate_rm[is.na.data.frame(duplicate_rm)] <- ""
+data_all[is.na.data.frame(data_all)] <- ""
     
 # Data Export ---- 
 write.csv(data_all, file = "shiny_geo_clean/trifolium_mattirolianum_standrarised_all.csv")
