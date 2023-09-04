@@ -13,7 +13,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp)
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occs_raw <- read.csv("shiny_geo_clean/trifolium_mattirolianum_IUCN_pointfile.csv")
+occs_raw <- read.csv("IUCN_point_files/dicoma_aethiopica_IUCN_pointfile.csv")
 occ_points <-  occs_raw %>% 
     filter.occurences(T) 
 
@@ -35,13 +35,13 @@ poly_1 <- st_read('', type = 3)
 # joining the two kmls
 poly_union <- st_union(est_range, poly_1)
 
-## 3. Making boundary
-boundary <- make.boundary(occ_points, eoo = T, buffer = F) # if buffer wants to be added define the distance as b where 0.1 = 1km
+## 3. Making boundary ######### NOTE NEED TO FIX make.boundary IT IS NOT WORKING WITH BUFFERED POLYGONS OR POINTS
+boundary <- make.boundary(occ_points, 1, eoo = T, buffer = T) # if buffer wants to be added define the distance as b where 0.1 = 1km
 
 ## 4. Parameters
 # setting min and max elevation
-elevmin <- 1300 # Varies dependent on species 
-elevmax <- 2100
+elevmin <- 1400 # Varies dependent on species 
+elevmax <- 1500
 
 # creating mask 
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
@@ -50,10 +50,10 @@ mask <- boundary # This can either be the est_range KML or the boundary object f
 DEMrast <- raster::raster("large/dem.tif") # elevation data
 
 # habitat raster
-habstack <- raster::raster("large/ethio_jung_hab_1km.tiff")
+habstack <- raster::raster("large/ESACCI_1km_2020.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(405, 1401, 1402)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c(120, 121, 122)) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
