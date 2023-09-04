@@ -180,11 +180,12 @@ make.boundary <- function(a, b, eoo = T, buffer = F){
             
             # make mcp
             st_convex_hull(st_union(points_spat)) %>% 
-                st_as_sf(type = 3)
+                st_as_sf(type = 3) 
             
             # add buffer
             buf <- st_buffer(points_spat, dist = b)
-            st_union(buf, points_spat)
+            buf_bound <- st_union(buf, points_spat) %>%
+                st_as_sf(type = 3)
             
             } else if(eoo == F & buffer == T){
          
