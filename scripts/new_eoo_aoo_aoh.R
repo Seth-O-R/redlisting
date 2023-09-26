@@ -13,7 +13,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp)
 source("scripts/functions.R")
 
 ## 3. Data Import and cleaning
-occs_raw <- read.csv("IUCN_point_files/dicoma_aethiopica_IUCN_pointfile.csv")
+occs_raw <- read.csv("IUCN_point_files/")
 occ_points <-  occs_raw %>% 
     filter.occurences(T) 
 
@@ -36,12 +36,12 @@ poly_1 <- st_read('', type = 3)
 poly_union <- st_union(est_range, poly_1)
 
 ## 3. Making boundary ######### NOTE NEED TO FIX make.boundary IT IS NOT WORKING WITH BUFFERED POLYGONS OR POINTS
-boundary <- make.boundary(occ_points, 1, eoo = T, buffer = T) # if buffer wants to be added define the distance as b where 0.1 = 1km
+boundary <- make.boundary(occ_points, eoo = T, buffer = F) # if buffer wants to be added define the distance as b where 0.1 = 1km
 
 ## 4. Parameters
 # setting min and max elevation
-elevmin <- 1400 # Varies dependent on species 
-elevmax <- 1500
+elevmin <- #### # Varies dependent on species 
+elevmax <- ####
 
 # creating mask 
 mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
@@ -53,7 +53,7 @@ DEMrast <- raster::raster("large/dem.tif") # elevation data
 habstack <- raster::raster("large/ESACCI_1km_2020.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c(120, 121, 122)) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = c()) # This will vary dependent on the habitat type 
 
 ## 4. Generate the AOH
 theDEM <- dem(DEMrast, mask, elevmin, elevmax)
@@ -107,7 +107,7 @@ area_of_aoh_in_pa <- print(sum(expanse(wpda_masked))/sum(expanse(aoh_polygon))*1
 aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transformation
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
-st_write(aoh_sf, "aoh_outs/argyrolobium_schimperianum_aoh_raw.shp")
+st_write(aoh_sf, "aoh_outs/.shp")
 
 ## 11. Exporting smoothed AOH with SIS datatable
 # adding required dataframe for shp. file 
@@ -119,11 +119,11 @@ sis_dataframe$source <- NA
 aoh_with_sis <- sp::merge(aoh_smooth, sis_dataframe)
 
 # writing aoh.shp file  
-st_write(aoh_with_sis, "aoh_outs/argyrolobium_schimperianum_distribution_polygon.shp", overwrite = T)
+st_write(aoh_with_sis, "aoh_outs/.shp", overwrite = T)
 
 ## 12. Exporting for external data tools
 # exporting boundary as shape file
-st_write(boundary, "aoh_outs/boundaries/Rhipidoglossum_candidum.kml", 
+st_write(boundary, "aoh_outs/boundaries/.kml", 
          driver = 'kml')
 
 # exporting occurences as shape file with boundary
@@ -132,9 +132,9 @@ points_spat <- occ_points %>%
     st_as_sf(coords = c("long", "lat"), crs = "4236") %>%
     st_buffer(dist = 0.01) #1 km buffer
 
-st_write(points_spat, "aoh_outs/boundaries/vaccinium_cuneifoliums_points_1km.kml",
+st_write(points_spat, "aoh_outs/boundaries/.kml",
          driver = 'kml')
 
 # exporting AOH PA intersection 
-writeVector(wpda_masked, "aoh_outs/pa_intersects/argyrolobium_schimperianum_pa_intersect.shp",
+writeVector(wpda_masked, "aoh_outs/pa_intersects/.shp",
             filetype = 'ESRI Shapefile', overwrite = T)

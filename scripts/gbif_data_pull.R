@@ -24,17 +24,17 @@ gbif_data <- occ_search(taxonKey = taxon_keys, fields = 'all')
 gbif_list <- vector('list', length(gbif_data))
 names(gbif_list) <- as.vector(spp_names$name_in) # setting names 
 
-for (s in as.vector(spp_names$name_in)) {
+for (s in 1:length(gbif_data)) {
     data <- gbif_data[[s]]$data
-    gbif_list[[s]] <- data.frame(data)
+    gbif_list[[s]] <- as.data.frame(data)
     
 }
 
-# cutting empty list sectioin (species with no records in GBIF)
+# cutting empty list sections (species with no records in GBIF)
 gbif_no_empt <- list_drop_empty(gbif_list) %>%
     lapply(data_frame)
 
-# filtering out uncessarry columns in prep for collapsing into single df
+# filtering out unnecessary columns in prep for collapsing into single df
 gbif_standard <- vector('list', length(gbif_no_empt))
 names(gbif_standard) <- names(gbif_no_empt)
     
