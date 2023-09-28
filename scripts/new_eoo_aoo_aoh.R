@@ -5,15 +5,15 @@
 ### Packages, libraries, functions and occurrence upload ----
 ## 1. Packages and Libraries
 install.packages(c("sf", "sp", "leaflet", "raster", "rCAT", "pacman", "tidyverse", 
-                   "stars", "terra", "smoothr")) 
+                   "stars", "terra", "smoothr")) # require development version of leaflet
 
 pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp) 
 
 ## 2. Functions 
-source("scripts/functions.R")
+source("scripts/seth_functions.R")
 
 ## 3. Data Import and cleaning
-occs_raw <- read.csv("IUCN_point_files/")
+occs_raw <- read.csv("IUCN_point_files/helichrysum_harennense_iucn_pointfile.csv")
 occ_points <-  occs_raw %>% 
     filter.occurences(T) 
 
@@ -25,48 +25,36 @@ eoo_aoo <- cal.eoo.aoo(occ_points)
 make.map(occ_points)
 
 ### AOH -----
-## 2. Data Import
-# Google earth KMLimport
-est_range <- st_read("", type = 3) 
-
-# Multi polygon second kml import
-poly_1 <- st_read('', type = 3)
-
-# joining the two kmls
-poly_union <- st_union(est_range, poly_1)
-
-## 3. Making boundary ######### NOTE NEED TO FIX make.boundary IT IS NOT WORKING WITH BUFFERED POLYGONS OR POINTS
+## 2. Making boundary ######### NOTE NEED TO FIX make.boundary IT IS NOT WORKING WITH BUFFERED POLYGONS OR POINTS
 boundary <- make.boundary(occ_points, eoo = T, buffer = F) # if buffer wants to be added define the distance as b where 0.1 = 1km
 
-## 4. Parameters
+## 3. AOH Parameters
 # setting min and max elevation
-elevmin <- #### # Varies dependent on species 
-elevmax <- ####
+elevmin <- 3200  
+elevmax <- 3500 
 
 # creating mask 
-mask <- boundary # This can either be the est_range KML or the boundary object from the EOO calculation                             
+mask <- boundary                              
 
 # elevation raster
-DEMrast <- raster::raster("large/dem.tif") # elevation data
+DEMrast <- rast("large/eth_DEM_100.tif")
 
 # habitat raster
-habstack <- raster::raster("large/ESACCI_1km_2020.tif")
+habstack <- rast("large/eth_jung.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = c()) # This will vary dependent on the habitat type 
+ESA_codes <- data.frame(ESA_codes = 307)  
 
 ## 4. Generate the AOH
-theDEM <- dem(DEMrast, mask, elevmin, elevmax)
-theHAB <- habitat(habstack, mask,  ESA_codes)
-theAOH <- aoh(theHAB, theDEM, mask)
+theAOH <- calc.aoh.sing(DEMrast, habstack, ESA_codes, mask, elevmin, elevmax)
 
-## 5. Generate the Red List stats from AOH 
+## 6. Generate the Red List stats from AOH 
 cal.aoh.stats(theAOH)
 
-## 6. Smoothing AoH
+## 7. Smoothing AoH
 # making aoh a polygon 
 aoh_polygon <- theAOH %>%
-    rasterToPolygons() %>%
+    terra::as.polygons() %>%
     st_as_sf() %>%
     st_union() %>%
     st_make_valid()
@@ -79,12 +67,51 @@ aoh_smooth <- smooth(aoh_no_crumbs, method = 'ksmooth', smoothness = 3) %>%
     st_union() %>%
     st_cast('POLYGON')
 
-## 7. Map View 
-make.aoh.map(occ_points, aoh_smooth, boundary_aoh = F, aoh_raster = F)
-cal.aoh.stats(theAOH)
+## 8. Map View 
+make.aoh.map(occ_points, theAOH, boundary_aoh = F, aoh_raster = T)
+
+
+
+# making occurrences spatial
+points_spat <- occ_points %>% 
+    select(long, lat) %>% 
+    st_as_sf(coords = c("long", "lat")) %>%
+    st_set_crs(4326)
+
+boundary_object <- st_convex_hull(st_union(points_spat)) %>% 
+    st_as_sf() %>%
+    st_set_crs(4326)
+
+pl
+
+
+# producing AOH map
+leaflet() %>%
+    addProviderTiles(providers$Esri.WorldImagery, group = "ersi") %>%
+    addScaleBar(position = "bottomright") %>%
+    addRasterImage(theAOH,
+                   color = "red", 
+                   opacity = 0.5) 
+
+#%>%
+    addCircleMarkers(data = points_spat, 
+                     color = "blue", 
+                     stroke = F, 
+                     fillOpacity = 0.8) %>%
+    addPolygons(data = boundary_object, 
+                color = "black",
+                weight = 1,
+                fillColor = "yellow",
+                group = "shape") %>% 
+    addPolygons(data = boundary_object, 
+                color = "black", weight = 2, fill = F)
+
+
+
+
 
 ### Percentage of AoH covered by protected areas ----
-## 8. loading in WDPA data and wrangling AoH data
+## 9. loading in WDPA data and wrangling AoH data
 # setting path
 files_path <- list.files(path = "large/wdpa_data/", pattern = "*shp", full.names = T )
 
@@ -97,19 +124,19 @@ wdpa_comb <- lapply(files_path, read_sf) %>%
 aoh_polygon <- as.polygons(terra::rast(theAOH)) %>%
     project(., crs(wdpa_comb))
 
-## 9. Masking wpda by aoh and calculating area 
+## 10. Masking wpda by aoh and calculating area 
 wpda_masked <- terra::intersect(aoh_polygon, wdpa_comb)
 area_of_aoh_in_pa <- print(sum(expanse(wpda_masked))/sum(expanse(aoh_polygon))*100)
 
 ### Data Export ----
-## 10. Export raw AOH 
+## 11. Export raw AOH 
 # converting and exporting aoh raw raster to sf
 aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transformation
     st_as_sf(as_points = F, merge = T) # converting to sf and merging points
 
 st_write(aoh_sf, "aoh_outs/.shp")
 
-## 11. Exporting smoothed AOH with SIS datatable
+## 12. Exporting smoothed AOH with SIS datatable
 # adding required dataframe for shp. file 
 sis_dataframe <- as.data.frame(occs_raw[1,]) %>%
     select(-dec_lat, -dec_long, -spatialref, -event_year, -basisofrec, -catalog_no, 
@@ -121,7 +148,7 @@ aoh_with_sis <- sp::merge(aoh_smooth, sis_dataframe)
 # writing aoh.shp file  
 st_write(aoh_with_sis, "aoh_outs/.shp", overwrite = T)
 
-## 12. Exporting for external data tools
+## 13. Exporting for external data tools
 # exporting boundary as shape file
 st_write(boundary, "aoh_outs/boundaries/.kml", 
          driver = 'kml')
