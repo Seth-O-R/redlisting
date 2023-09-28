@@ -1,3 +1,5 @@
+# Seth redlisting functions - 28/09/23
+
 # filter.occurences - filter occurences coded as 4, 6 on upload 
 filter.occurences <- function(occurences, T){
     if(T){
@@ -36,7 +38,7 @@ cal.eoo.aoo <- function(occurences) {
     
 }
 
-# make.boundary 
+# make.boundary - makes boundary object from occurrence points
 make.boundary <- function(a, b, eoo = T, buffer = F){
     
     if(eoo == T & buffer == F) {
@@ -79,6 +81,80 @@ make.boundary <- function(a, b, eoo = T, buffer = F){
     }
 }
 
+# calc.aoh.sing - New AOH function for single species as the old one was not clipping by elevation
+calc.aoh.sing <- function(dem, habitat, hab_codes, boundary, elv_min, elv_max) {
+    suppressWarnings({  
+        # cropping elevation by boundary
+        dem_crop <- crop(dem, boundary)
+        
+        # reducing values down to elevation boundary, everything elsa NA
+        dem_crop[dem_crop < elv_min] <- NA 
+        dem_crop[dem_crop > elv_max] <- NA 
+        
+        # cropping hab
+        hab_crop <- crop(habitat, boundary)
+        
+        # converting hab to df to filter by hab codes
+        hab_vals <- terra::as.data.frame(hab_crop, xy = T)
+        
+        colnames(hab_vals) <- c('lat', 'long', 'aoh')
+        
+        reduced_hab <- hab_vals %>%
+            filter(.[,3 ] %in% hab_codes)
+        
+        red_hab_rast <- rast(reduced_hab, type = "xyz", crs = 'WGS84')
+        
+        # hab masked by elv 
+        aoh_rast <- mask(red_hab_rast, dem_crop)
+        aoh_rast[!is.na(aoh_rast)] <- 1
+        
+        aoh_to_eoo <- mask(aoh_rast, boundary)
+        
+        # calculating aoh EOO and AOH re-scalled to 2x2 
+        # EOO
+        aoh_eoo_df <- terra::as.data.frame(aoh_to_eoo, xy = T)
+        
+        aoh_eoo_ll <- aoh_eoo_df %>%
+            dplyr::rename(lat = y, long = x) %>%
+            select(lat, long)
+        
+        aoh_center <- trueCOGll(aoh_eoo_ll)
+        aoh_eoo_proj <- rCAT::simProjWiz(aoh_eoo_ll, aoh_center)
+        aoh_eoom2 <- EOOarea(aoh_eoo_proj)
+        aoh_eookm2 <- abs(aoh_eoom2/1000000) #calculates km2
+        
+        # AOO
+        aoh_cell_size_m <- 2000 # sets to 2x2 km grid
+        aoh_aoo_no_cells <- AOOsimp (aoh_eoo_proj, aoh_cell_size_m)
+        aoh_aookm2 <- aoh_aoo_no_cells * (aoh_cell_size_m/1000)^2
+        
+        print(paste0("AOH EOO = ", ceiling(aoh_eookm2), "; AOH AOO = ", ceiling(aoh_aookm2)))
+        
+        return(aoh_to_eoo)
+    })
+}
+
+# cal.aoh.stats -  Calls AOH stats 
+cal.aoh.stats <- function(the_aoh){
+    # EOO
+    aoh_eoo_df <- terra::as.data.frame(theAOH, xy = T)
+    
+    aoh_eoo_ll <- aoh_eoo_df %>%
+        dplyr::rename(lat = y, long = x) %>%
+        select(lat, long)
+    
+    aoh_center <- trueCOGll(aoh_eoo_ll)
+    aoh_eoo_proj <- rCAT::simProjWiz(aoh_eoo_ll, aoh_center)
+    aoh_eoom2 <- EOOarea(aoh_eoo_proj)
+    aoh_eookm2 <- abs(aoh_eoom2/1000000) #calculates km2
+    
+    # AOO
+    aoh_cell_size_m <- 2000 # sets to 2x2 km grid
+    aoh_aoo_no_cells <- AOOsimp (aoh_eoo_proj, aoh_cell_size_m)
+    aoh_aookm2 <- aoh_aoo_no_cells * (aoh_cell_size_m/1000)^2
+    
+    print(paste0(eoo_aoo, "; AOH EOO = ", ceiling(aoh_eookm2), "; AOH AOO = ", ceiling(aoh_aookm2)))
+}
 
 # make.map - produces map using leaflet 
 make.map <- function(occurences){
@@ -104,65 +180,8 @@ make.map <- function(occurences){
                     color = "red", weight = 2, fill = F)  # Need to figure out how to add AOO squares onto the map
 }
 
-
-# calc.aoh.sing - New AOH function for single species as the old one was not clipping by elevation
-calc.aoh.sing <- function(dem, habitat, hab_codes, boundary, elv_min, elv_max) {
-  suppressWarnings({  
-    # cropping elevation by boundary
-    dem_crop <- crop(dem, boundary)
-    
-    # reducing values down to elevation boundary, everything elsa NA
-    dem_crop[dem_crop < elv_min] <- NA 
-    dem_crop[dem_crop > elv_max] <- NA 
-    
-    # cropping hab
-    hab_crop <- crop(habitat, boundary)
-    
-    # converting hab to df to filter by hab codes
-    hab_vals <- terra::as.data.frame(hab_crop, xy = T)
-    
-    colnames(hab_vals) <- c('lat', 'long', 'aoh')
-    
-    reduced_hab <- hab_vals %>%
-        filter(.[,3 ] %in% hab_codes)
-    
-    red_hab_rast <- rast(reduced_hab, type = "xyz", crs = 'WGS84')
-    
-    # hab masked by elv 
-    aoh_rast <- mask(red_hab_rast, dem_crop)
-    aoh_rast[!is.na(aoh_rast)] <- 1
-    
-    aoh_to_eoo <- mask(aoh_rast, boundary)
-    
-    # calculating aoh EOO and AOH re-scalled to 2x2 
-    # EOO
-    aoh_eoo_df <- terra::as.data.frame(aoh_to_eoo, xy = T)
-    
-    aoh_eoo_ll <- aoh_eoo_df %>%
-        dplyr::rename(lat = y, long = x) %>%
-        select(lat, long)
-    
-    aoh_center <- trueCOGll(aoh_eoo_ll)
-    aoh_eoo_proj <- rCAT::simProjWiz(aoh_eoo_ll, aoh_center)
-    aoh_eoom2 <- EOOarea(aoh_eoo_proj)
-    aoh_eookm2 <- abs(aoh_eoom2/1000000) #calculates km2
-    
-    # AOO
-    aoh_cell_size_m <- 2000 # sets to 2x2 km grid
-    aoh_aoo_no_cells <- AOOsimp (aoh_eoo_proj, aoh_cell_size_m)
-    aoh_aookm2 <- aoh_aoo_no_cells * (aoh_cell_size_m/1000)^2
-    
-    print(paste0("; AOH EOO = ", ceiling(aoh_eookm2), "; AOH AOO = ", ceiling(aoh_aookm2)))
-    
-    return(aoh_to_eoo)
-    
-  })
-    }
-
 # make.aoh.map - make map for aoh using leaflet
 make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F, aoh_raster = F){
-    
-    crs(the_aoh) <- '+proj=longlat +datum=WGS84'
     
     if(aoh_raster == T & boundary_aoh == F){
         
@@ -182,6 +201,7 @@ make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F, aoh_raster = F){
             addProviderTiles(providers$Esri.WorldImagery, group = "ersi") %>%
             addScaleBar(position = "bottomright") %>%
             addRasterImage(the_aoh,
+                           group = "aoh",
                            color = "red", 
                            opacity = 0.5) %>%
             addCircleMarkers(data = points_spat, 
@@ -220,6 +240,7 @@ make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F, aoh_raster = F){
             addProviderTiles(providers$Esri.WorldImagery, group = "ersi") %>%
             addScaleBar(position = "bottomright") %>%
             addRasterImage(the_aoh,
+                           group = "aoh",
                            color = "red",
                            opacity = 0.5) %>%
             addCircleMarkers(data = points_spat, 
