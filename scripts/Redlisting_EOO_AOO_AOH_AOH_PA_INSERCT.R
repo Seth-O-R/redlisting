@@ -5,7 +5,7 @@
 ### Packages, libraries, functions and occurrence upload ----
 ## 1. Packages and Libraries
 install.packages(c("sf", "sp", "leaflet", "raster", "rCAT", "pacman", "tidyverse", 
-                   "stars", "terra", "smoothr")) # require development version of leaflet
+                   "stars", "terra", "smoothr")) # requires development version of leaflet for mapping spatrast
 
 pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp) 
 
@@ -25,16 +25,13 @@ eoo_aoo <- cal.eoo.aoo(occ_points)
 make.map(occ_points)
 
 ### AOH -----
-## 2. Making boundary ######### NOTE NEED TO FIX make.boundary IT IS NOT WORKING WITH BUFFERED POLYGONS OR POINTS
-boundary <- make.boundary(occ_points, eoo = T, buffer = F) # if buffer wants to be added define the distance as b where 0.1 = 1km
+## 2. Making boundary - if buffer wants to be added define the distance as b where 0.1 = 10km 
+boundary <- make.boundary(occ_points, 0.01, eoo = F, buffer = T) 
 
 ## 3. AOH Parameters
 # setting min and max elevation
 elevmin <- 3200  
 elevmax <- 3500 
-
-# creating mask 
-mask <- boundary                              
 
 # elevation raster
 DEMrast <- rast("large/eth_DEM_100.tif")
@@ -46,7 +43,7 @@ habstack <- rast("large/eth_jung.tif")
 ESA_codes <- data.frame(ESA_codes = 307)  
 
 ## 4. Generate the AOH
-theAOH <- calc.aoh.sing(DEMrast, habstack, ESA_codes, mask, elevmin, elevmax)
+theAOH <- calc.aoh.sing(DEMrast, habstack, ESA_codes, boundary, elevmin, elevmax)
 
 ## 6. Generate the Red List stats from AOH 
 cal.aoh.stats(theAOH)
@@ -69,46 +66,6 @@ aoh_smooth <- smooth(aoh_no_crumbs, method = 'ksmooth', smoothness = 3) %>%
 
 ## 8. Map View 
 make.aoh.map(occ_points, theAOH, boundary_aoh = F, aoh_raster = T)
-
-
-
-# making occurrences spatial
-points_spat <- occ_points %>% 
-    select(long, lat) %>% 
-    st_as_sf(coords = c("long", "lat")) %>%
-    st_set_crs(4326)
-
-boundary_object <- st_convex_hull(st_union(points_spat)) %>% 
-    st_as_sf() %>%
-    st_set_crs(4326)
-
-pl
-
-
-# producing AOH map
-leaflet() %>%
-    addProviderTiles(providers$Esri.WorldImagery, group = "ersi") %>%
-    addScaleBar(position = "bottomright") %>%
-    addRasterImage(theAOH,
-                   color = "red", 
-                   opacity = 0.5) 
-
-#%>%
-    addCircleMarkers(data = points_spat, 
-                     color = "blue", 
-                     stroke = F, 
-                     fillOpacity = 0.8) %>%
-    addPolygons(data = boundary_object, 
-                color = "black",
-                weight = 1,
-                fillColor = "yellow",
-                group = "shape") %>% 
-    addPolygons(data = boundary_object, 
-                color = "black", weight = 2, fill = F)
-
-
-
-
 
 ### Percentage of AoH covered by protected areas ----
 ## 9. loading in WDPA data and wrangling AoH data
