@@ -4,8 +4,10 @@
 
 ### Packages, libraries, functions and occurrence upload ----
 ## 1. Packages and Libraries
-install.packages(c("sf", "sp", "leaflet", "raster", "rCAT", "pacman", "tidyverse", 
-                   "stars", "terra", "smoothr")) # requires development version of leaflet for mapping spatrast
+install.packages(c("sf", "sp", "raster", "rCAT", "pacman", "tidyverse", 
+                   "stars", "terra", "smoothr")) 
+
+remotes::install_github('rstudio/leaflte') # this script requires the development version of to create the AOH maps
 
 pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp) 
 
@@ -26,7 +28,7 @@ make.map(occ_points)
 
 ### AOH -----
 ## 2. Making boundary - if buffer wants to be added define the distance as b where 0.1 = 10km 
-boundary <- make.boundary(occ_points, 0.01, eoo = F, buffer = T) 
+boundary <- make.boundary(occ_points, eoo = T, buffer = F) 
 
 ## 3. AOH Parameters
 # setting min and max elevation
@@ -65,9 +67,9 @@ aoh_smooth <- smooth(aoh_no_crumbs, method = 'ksmooth', smoothness = 3) %>%
     st_cast('POLYGON')
 
 ## 8. Map View 
-make.aoh.map(occ_points, theAOH, boundary_aoh = F, aoh_raster = T)
+make.aoh.map(occ_points, theAOH, boundary_aoh = T, aoh_raster = T)
 
-### Percentage of AoH covered by protected areas ----
+### Protected Area Occurrence and Percentage of AoH covered by protected areas ----
 ## 9. loading in WDPA data and wrangling AoH data
 # setting path
 files_path <- list.files(path = "large/wdpa_data/", pattern = "*shp", full.names = T )
@@ -76,6 +78,9 @@ files_path <- list.files(path = "large/wdpa_data/", pattern = "*shp", full.names
 wdpa_comb <- lapply(files_path, read_sf) %>%
     do.call(rbind, .) %>%
     vect()
+
+# Occurrence in PA's 
+pa.occurrence(wdpa_comb, occ_points)
 
 # Converting raw AoH to polygon 
 aoh_polygon <- as.polygons(terra::rast(theAOH)) %>%
