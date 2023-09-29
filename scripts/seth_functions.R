@@ -328,7 +328,6 @@ make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F, aoh_raster = F){
 }
 
 # pa.occurrence - function which lists PA the species occurs in - set up to work with WDPA
-
 pa.occurrence <- function(pa_file, occs) {
     
     occs_vect <- vect(occ_points, geom = c('long', 'lat'), crs = "WGS84")

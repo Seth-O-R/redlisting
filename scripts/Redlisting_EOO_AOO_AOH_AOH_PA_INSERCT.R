@@ -82,7 +82,7 @@ wdpa_comb <- lapply(files_path, read_sf) %>%
 # Occurrence in PA's 
 pa.occurrence(wdpa_comb, occ_points)
 
-# Converting raw AoH to polygon 
+# Converting AoH to polygon 
 aoh_polygon <- as.polygons(terra::rast(theAOH)) %>%
     project(., crs(wdpa_comb))
 
@@ -92,11 +92,9 @@ area_of_aoh_in_pa <- print(sum(expanse(wpda_masked))/sum(expanse(aoh_polygon))*1
 
 ### Data Export ----
 ## 11. Export raw AOH 
-# converting and exporting aoh raw raster to sf
-aoh_sf <- st_as_stars(theAOH) %>% # converting to stars object for sf transformation
-    st_as_sf(as_points = F, merge = T) # converting to sf and merging points
-
-st_write(aoh_sf, "aoh_outs/.shp")
+# exporting aoh raw polygon raster to sf
+writeVector(aoh_polygon, "aoh_outs/.shp",
+            filetype = 'ESRI Shapefile', overwrite = T) # using the aoh polygon from earlier in the aoh smooth process
 
 ## 12. Exporting smoothed AOH with SIS datatable
 # adding required dataframe for shp. file 
@@ -115,7 +113,7 @@ st_write(aoh_with_sis, "aoh_outs/.shp", overwrite = T)
 st_write(boundary, "aoh_outs/boundaries/.kml", 
          driver = 'kml')
 
-# exporting occurences as shape file with boundary
+# exporting occurrences as shape file with boundary
 points_spat <- occ_points %>% 
     select(long, lat) %>% 
     st_as_sf(coords = c("long", "lat"), crs = "4236") %>%
@@ -125,5 +123,6 @@ st_write(points_spat, "aoh_outs/boundaries/.kml",
          driver = 'kml')
 
 # exporting AOH PA intersection 
-writeVector(wpda_masked, "aoh_outs/pa_intersects/.shp",
+writeVector(wpda_masked, "aoh_outs/pa_intersects/helichrysum_harenennse_pa_intersect.shp",
             filetype = 'ESRI Shapefile', overwrite = T)
+    
