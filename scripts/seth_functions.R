@@ -59,14 +59,15 @@ make.boundary <- function(a, b, eoo = T, buffer = F){
             select(long, lat) %>% 
             st_as_sf(coords = c("long", "lat"), crs = "4236")
         
-        # make mcp
-        st_convex_hull(st_union(points_spat)) %>% 
-            st_as_sf(type = 3) 
-        
         # add buffer
         buf <- st_buffer(points_spat, dist = b)
         buf_bound <- st_union(buf, points_spat) %>%
             st_as_sf(type = 3)
+        
+        # make mcp
+        st_convex_hull(st_union(buf_bound)) %>% 
+            st_as_sf(type = 3) 
+        
         
     } else if(eoo == F & buffer == T){
         
@@ -225,7 +226,7 @@ make.aoh.map <- function(occurences, the_aoh, boundary_aoh = F, aoh_raster = F){
             st_set_crs(4326)
         
         # making boundary on aoh
-        boundary_object <- as.data.frame(rasterToPoints(the_aoh)) %>%
+        boundary_object <- terra::as.data.frame(the_aoh, xy = T) %>%
             rename(lat = x, long = y) %>%
             st_as_sf(coords = c("lat", "long")) %>%
             st_set_crs(4326)
