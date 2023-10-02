@@ -83,7 +83,7 @@ wdpa_comb <- lapply(files_path, read_sf) %>%
 pa.occurrence(wdpa_comb, occ_points)
 
 # Converting AoH to polygon 
-aoh_polygon <- as.polygons(terra::rast(theAOH)) %>%
+aoh_polygon <- as.polygons(theAOH) %>%
     project(., crs(wdpa_comb))
 
 ## 10. Masking wpda by aoh and calculating area 
