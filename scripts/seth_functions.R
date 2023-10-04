@@ -102,15 +102,13 @@ calc.aoh.sing <- function(dem, habitat, hab_codes, boundary, elv_min, elv_max) {
         
         colnames(hab_vals) <- c('lat', 'long', 'aoh')
         
-        hab_num_vect <- as.numeric(hab_codes$ESA_codes)
+        hab_num_vect <- as.numeric(hab_codes[1])
         
         reduced_hab <- hab_vals %>%
             filter(aoh %in% hab_num_vect)
         
-        red_hab_rast <- rast(reduced_hab, type = "xyz", crs = 'WGS84')
-        
-        # matching extents for mask 
-        
+        red_hab_rast <- rast(reduced_hab, type = "xyz", crs = 'WGS84', 
+                             extent = ext(boundary))
         
         # hab masked by elv 
         aoh_rast <- mask(red_hab_rast, dem_crop)

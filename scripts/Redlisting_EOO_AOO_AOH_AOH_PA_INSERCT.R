@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp)
 source("scripts/seth_functions.R")
 
 ## 3. Data Import and cleaning
-occs_raw <- read.csv("IUCN_point_files/helichrysum_harennense_iucn_pointfile.csv")
+occs_raw <- read.csv("IUCN_point_files/rhynchosia_stipulosa_IUCN_Pointfile.csv")
 occ_points <-  occs_raw %>% 
     filter.occurences(T) 
 
@@ -32,8 +32,8 @@ boundary <- make.boundary(occ_points, eoo = T, buffer = F)
 
 ## 3. AOH Parameters
 # setting min and max elevation
-elevmin <- 3200  
-elevmax <- 3500 
+elevmin <- 1000  
+elevmax <- 1800 
 
 # elevation raster
 DEMrast <- rast("large/eth_DEM_100.tif")
@@ -42,7 +42,7 @@ DEMrast <- rast("large/eth_DEM_100.tif")
 habstack <- rast("large/eth_jung.tif")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = 307)  
+ESA_codes <- data.frame(ESA_codes = 105)  
 
 ## 4. Generate the AOH
 theAOH <- calc.aoh.sing(DEMrast, habstack, ESA_codes, boundary, elevmin, elevmax)
@@ -67,7 +67,7 @@ aoh_smooth <- smooth(aoh_no_crumbs, method = 'ksmooth', smoothness = 3) %>%
     st_cast('POLYGON')
 
 ## 8. Map View 
-make.aoh.map(occ_points, theAOH, boundary_aoh = T, aoh_raster = T)
+make.aoh.map(occ_points, aoh_smooth, boundary_aoh = F, aoh_raster = F)
 
 ### Protected Area Occurrence and Percentage of AoH covered by protected areas ----
 ## 9. loading in WDPA data and wrangling AoH data
@@ -92,9 +92,9 @@ area_of_aoh_in_pa <- print(sum(expanse(wpda_masked))/sum(expanse(aoh_polygon))*1
 
 ### Data Export ----
 ## 11. Export raw AOH 
-# exporting aoh raw polygon raster to sf
-writeVector(aoh_polygon, "aoh_outs/.shp",
-            filetype = 'ESRI Shapefile', overwrite = T) # using the aoh polygon from earlier in the aoh smooth process
+# exporting aoh raw raster as shp file
+writeVector(as.polygons(theAOH), "aoh_outs/rhynchosia_stipulosa.shp",
+            filetype = 'ESRI Shapefile', overwrite = T) 
 
 ## 12. Exporting smoothed AOH with SIS datatable
 # adding required dataframe for shp. file 
