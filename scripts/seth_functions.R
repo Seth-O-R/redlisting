@@ -1,5 +1,7 @@
 # Seth redlisting functions - 28/09/23
 
+hab_crosswalk <- read.csv("hab_crosswalk.csv")
+
 # filter.occurences - filter occurences coded as 4, 6 on upload 
 filter.occurences <- function(occurences, T){
     if(T){
@@ -100,10 +102,15 @@ calc.aoh.sing <- function(dem, habitat, hab_codes, boundary, elv_min, elv_max) {
         
         colnames(hab_vals) <- c('lat', 'long', 'aoh')
         
+        hab_num_vect <- as.numeric(hab_codes$ESA_codes)
+        
         reduced_hab <- hab_vals %>%
-            filter(.[,3 ] %in% hab_codes)
+            filter(aoh %in% hab_num_vect)
         
         red_hab_rast <- rast(reduced_hab, type = "xyz", crs = 'WGS84')
+        
+        # matching extents for mask 
+        
         
         # hab masked by elv 
         aoh_rast <- mask(red_hab_rast, dem_crop)
