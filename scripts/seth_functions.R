@@ -86,7 +86,7 @@ make.boundary <- function(a, b, eoo = T, buffer = F){
 
 # calc.aoh.sing - New AOH function for single species as the old one was not clipping by elevation
 calc.aoh.sing <- function(dem, habitat, hab_codes, boundary, elv_min, elv_max) {
-    suppressWarnings({  
+    suppressWarnings({
         # cropping elevation by boundary
         dem_crop <- crop(dem, boundary)
         
@@ -102,7 +102,7 @@ calc.aoh.sing <- function(dem, habitat, hab_codes, boundary, elv_min, elv_max) {
         
         colnames(hab_vals) <- c('lat', 'long', 'aoh')
         
-        hab_num_vect <- as.numeric(hab_codes[1])
+        hab_num_vect <- as.numeric(hab_codes[,1])
         
         reduced_hab <- hab_vals %>%
             filter(aoh %in% hab_num_vect)
