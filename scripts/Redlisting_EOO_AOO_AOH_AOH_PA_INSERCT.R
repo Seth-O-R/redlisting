@@ -7,7 +7,7 @@
 install.packages(c("sf", "sp", "raster", "rCAT", "pacman", "tidyverse", 
                    "stars", "terra", "smoothr")) 
 
-remotes::install_github('rstudio/leaflte') # this script requires the development version of to create the AOH maps
+remotes::install_github('rstudio/leaflet') # this script requires the development version of to create the AOH maps
 
 pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp) 
 
