@@ -17,6 +17,35 @@ filter.occurences <- function(occurences, T){
     }
 }
 
+# polygon.eoo.aoo - calculate EOO and AOO from polygon data 
+polygon.eoo.aoo <- function(polygons) {
+    
+    # creating blank raster to act as base for vect 
+    blank_rast <- rast(polygons, ncols = 1000, nrows = 1000)
+    
+    # rasterising hydros
+    poly_rast <- rasterize(polygons, blank_rast, 'presence')
+    
+    # calculating EOO
+    poly_eoo_df <- terra::as.data.frame(poly_rast, xy = T)
+    
+    poly_eoo_ll <- poly_eoo_df %>%
+        dplyr::rename(lat = y, long = x) %>%
+        select(lat, long)
+    
+    poly_center <- trueCOGll(poly_eoo_ll)
+    poly_eoo_proj <- rCAT::simProjWiz(poly_eoo_ll, poly_center)
+    poly_eoom2 <- EOOarea(poly_eoo_proj)
+    poly_eookm2 <- abs(poly_eoom2/1000000) #calculates km2
+    
+    # AOO
+    poly_cell_size_m <- 2000 # sets to 2x2 km grid
+    poly_aoo_no_cells <- AOOsimp (poly_eoo_proj, poly_cell_size_m)
+    poly_aookm2 <- poly_aoo_no_cells * (poly_cell_size_m/1000)^2
+    
+    print(paste0("AOH EOO = ", ceiling(poly_eookm2), "; AOH AOO = ", ceiling(poly_aookm2)))
+}
+
 # cal.eoo.aoo - almagamation of rCAT functions to reduce code and calculate EOO and AOO
 cal.eoo.aoo <- function(occurences) {
     
@@ -184,6 +213,43 @@ make.map <- function(occurences){
                          fillOpacity = 0.8) %>%
         addPolygons(data = mcp,
                     color = "red", weight = 2, fill = F)  # Need to figure out how to add AOO squares onto the map
+}
+
+# make.poly.map - make a point and polygon map using leaflet
+make.poly.map <- function(occurences, polygons) {
+    # making occurrences spatial
+    points_spat <- occurences %>% 
+        select(long, lat) %>% 
+        st_as_sf(coords = c("long", "lat")) %>%
+        st_set_crs(4326)
+    
+    # making boundary
+    polygon_sf <- st_as_sf(polygons)
+    
+    boundary_object <- st_convex_hull(st_union(polygon_sf)) %>% 
+        st_as_sf() %>%
+        st_set_crs(4326)
+    
+    # producing map
+    leaflet() %>%
+        addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
+        addProviderTiles(providers$Esri.WorldImagery, group = "ersi") %>%
+        addScaleBar(position = "bottomright") %>%
+        addPolygons(data = polygons,
+                    color = "red",
+                    fillColor = "red",
+                    opacity = 0.5) %>%
+        addCircleMarkers(data = points_spat, 
+                         color = "blue", 
+                         stroke = F, 
+                         fillOpacity = 0.8) %>%
+        addPolygons(data = boundary_object, 
+                    color = "black",
+                    weight = 1,
+                    fillColor = "yellow",
+                    group = "shape") %>% 
+        addPolygons(data = boundary_object, 
+                    color = "black", weight = 2, fill = F)
 }
 
 # make.aoh.map - make map for aoh using leaflet
