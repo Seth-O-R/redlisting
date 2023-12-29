@@ -15,7 +15,7 @@ pacman::p_load(sf, leaflet, raster, rCAT, tidyverse, stars, terra, smoothr, sp)
 source("scripts/seth_functions.R")
 
 ## 3. Data Import and cleaning
-occs_raw <- read.csv("IUCN_point_files/rhynchosia_stipulosa_IUCN_Pointfile.csv")
+occs_raw <- read.csv("IUCN_point_files/senecio_fresenii_iucn_pointfile.csv")
 occ_points <-  occs_raw %>% 
     filter.occurences(T) 
 
@@ -32,17 +32,17 @@ boundary <- make.boundary(occ_points, eoo = T, buffer = F)
 
 ## 3. AOH Parameters
 # setting min and max elevation
-elevmin <- 1000  
-elevmax <- 1800 
+elevmin <- 1500 
+elevmax <- 4300
 
 # elevation raster
-DEMrast <- rast("large/eth_DEM_100.tif")
+DEMrast <- rast("large/dem.tif")
 
 # habitat raster
-habstack <- rast("large/eth_jung.tif")
+habstack <- rast("large/jung_hab_1km_global.tiff")
 
 # Defining habitat codes
-ESA_codes <- data.frame(ESA_codes = 105)  
+ESA_codes <- data.frame(ESA_codes = c(105, 307, 407))  
 
 ## 4. Generate the AOH
 theAOH <- calc.aoh.sing(DEMrast, habstack, ESA_codes, boundary, elevmin, elevmax)
@@ -67,7 +67,7 @@ aoh_smooth <- smooth(aoh_no_crumbs, method = 'ksmooth', smoothness = 3) %>%
     st_cast('POLYGON')
 
 ## 8. Map View 
-make.aoh.map(occ_points, aoh_smooth, boundary_aoh = F, aoh_raster = F)
+make.aoh.map(occ_points, aoh_smooth, boundary_aoh = T, aoh_raster = F)
 
 ### Protected Area Occurrence and Percentage of AoH covered by protected areas ----
 ## 9. loading in WDPA data and wrangling AoH data
@@ -93,7 +93,7 @@ area_of_aoh_in_pa <- print(sum(expanse(wpda_masked))/sum(expanse(aoh_polygon))*1
 ### Data Export ----
 ## 11. Export raw AOH 
 # exporting aoh raw raster as shp file
-writeVector(as.polygons(theAOH), "aoh_outs/rhynchosia_stipulosa.shp",
+writeVector(as.polygons(theAOH), "aoh_outs/senecio_fresenii_raw_aoh.shp",
             filetype = 'ESRI Shapefile', overwrite = T) 
 
 ## 12. Exporting smoothed AOH with SIS datatable
@@ -106,7 +106,7 @@ sis_dataframe$source <- NA
 aoh_with_sis <- sp::merge(aoh_smooth, sis_dataframe)
 
 # writing aoh.shp file  
-st_write(aoh_with_sis, "aoh_outs/.shp", overwrite = T)
+st_write(aoh_with_sis, "aoh_outs/senecio_fresenii_smoothed_aoh.shp", overwrite = T)
 
 ## 13. Exporting for external data tools
 # exporting boundary as shape file
@@ -123,6 +123,6 @@ st_write(points_spat, "aoh_outs/boundaries/.kml",
          driver = 'kml')
 
 # exporting AOH PA intersection 
-writeVector(wpda_masked, "aoh_outs/pa_intersects/helichrysum_harenennse_pa_intersect.shp",
+writeVector(wpda_masked, "aoh_outs/pa_intersects/echinops_ellenbeckii_pa_intersect.shp",
             filetype = 'ESRI Shapefile', overwrite = T)
     
